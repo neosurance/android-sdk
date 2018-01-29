@@ -1,0 +1,95 @@
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="initial-scale=1, maximum-scale=1">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="format-detection" content="telephone=no">
+<link href="ui/app/css/app-min.css" rel="stylesheet">
+<script>
+function loadUi() {
+
+}
+</script>
+<script src="ui/app/js/app-min.js"></script>
+<style>
+#stage {
+  text-align:center;
+}
+.title,.code {
+  font-size:1.75em;
+  font-weight: bold;
+  padding-bottom:20px;
+}
+.code {
+  font-size:2.5em;
+}
+.btn {
+  font-size:1.5em;
+}
+</style>
+</head>
+<body style="background-color:white">
+<div id="stage">
+
+</div>
+<script>
+    var data = {};
+    function setPage(n) {
+        $('#stage').html(new EJS({text:$('#template-'+n).html(),type:'['}).render(data));
+    }
+    function setContentData(appData) {
+        $('#stage').html('<center>Loading...</center>');
+        data = appData;
+    }
+    function sendEvent(message) {
+      NSSdk.postMessage(JSON.stringify(message));
+    }
+</script>
+<script id="template-2" type="text/ui-template">
+  <div class="title">Power Events</div>
+  <div class="buttons">
+  <div class="btn btn-default btn-block" onclick="sendEvent({event:'power',payload:{type:'plugged',level:'100'}})"><i class="fa fa-plug"></i> Plugged</div>
+  <div class="btn btn-default btn-block" onclick="sendEvent({event:'power',payload:{type:'unplugged',level:'25'}})"><i class="fa fa-battery-1"></i> 25%</div>
+  <div class="btn btn-default btn-block" onclick="sendEvent({event:'power',payload:{type:'unplugged',level:'50'}})"><i class="fa fa-battery-2"></i> 50%</div>
+  <div class="btn btn-default btn-block" onclick="sendEvent({event:'power',payload:{type:'unplugged',level:'75'}})"><i class="fa fa-battery-3"></i> 75%</div>
+  <div class="btn btn-default btn-block" onclick="sendEvent({event:'power',payload:{type:'unplugged',level:'100'}})"><i class="fa fa-battery-4"></i> 100%</div>
+  </div>
+</script>
+<script id="template-3" type="text/ui-template">
+  <div class="title">Settings</div>
+  <div class="code">[%= code %]</div>
+  <div class="buttons">
+  <div class="btn btn-default btn-block" onclick="sendEvent({event:'refresh'})"><i class="fa fa-refresh"></i> Reset</div>
+  </div>
+</script>
+<script id="template-5" type="text/ui-template">
+<div class="title">Motion Events</div>
+<div class="buttons">
+<div class="btn btn-default btn-block" onclick="sendEvent({event:'activity',payload:{type:'walk',confidence:'75'}})"><i class="fa fa-map-o"></i> Walk</div>
+<div class="btn btn-default btn-block" onclick="sendEvent({event:'activity',payload:{type:'still',confidence:'75'}})"><i class="fa fa-bed"></i> Still</div>
+<div class="btn btn-default btn-block" onclick="sendEvent({event:'activity',payload:{type:'car',confidence:'75'}})"><i class="fa fa-car"></i> Car</div>
+<div class="btn btn-default btn-block" onclick="sendEvent({event:'activity',payload:{type:'run',confidence:'75'}})"><i class="fa fa-trophy"></i> Run</div>
+<div class="btn btn-default btn-block" onclick="sendEvent({event:'activity',payload:{type:'bicycle',confidence:'75'}})"><i class="fa fa-bicycle"></i> Bicycle</div>
+</div>
+</script>
+<script id="template-6" type="text/ui-template">
+  <div class="title">Custom Events</div>
+  <div class="buttons">
+  [% for(i in events) {
+    var item = events[i];
+  %]
+  <div class="btn btn-default btn-block" onclick='sendEvent({event:"[%=item.event%]",payload:[%=JSON.stringify(item.payload)%]})'><i class="fa fa-bullseye"></i> [%=item.menu%]</div>
+  [%} %]
+  </div>
+</script>
+<script id="template-8" type="text/ui-template">
+<div class="title">Connection</div>
+<div class="buttons">
+<div class="btn btn-default btn-block" onclick="sendEvent({event:'connection',payload:{type:'wi-fi'}})"><i class="fa fa-wifi"></i> WI-FI</div>
+<div class="btn btn-default btn-block" onclick="sendEvent({event:'connection',payload:{type:'mobile'}})"><i class="fa fa-mobile"></i> Mobile</div>
+</div>
+</script>
+</body>
+</html>

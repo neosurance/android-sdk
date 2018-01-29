@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" android:id="@+id/root">
+
+
+    <FrameLayout
+        android:id="@+id/web"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <com.clickntap.tap.web.TapWebView
+            android:id="@+id/webView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/menuFrame"
+        android:layout_width="0dip"
+        android:layout_height="0dip"
+        android:visibility="invisible">
+
+        <ImageView
+            android:id="@+id/menu"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/menu_toolbar"/>
+        <FrameLayout
+            android:id="@+id/btnWifi"
+            android:layout_width="0dip"
+            android:layout_height="0dip" android:onClick="onWifi">
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/btn_wifi"/>
+        </FrameLayout>
+        <FrameLayout
+            android:id="@+id/btnHands"
+            android:layout_width="0dip"
+            android:layout_height="0dip" android:onClick="onHands">
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/btn_hands"/>
+        </FrameLayout>
+        <FrameLayout
+            android:id="@+id/btnBattery"
+            android:layout_width="0dip"
+            android:layout_height="0dip" android:onClick="onBattery">
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/btn_battery"/>
+        </FrameLayout>
+        <FrameLayout
+            android:id="@+id/btnSettings"
+            android:layout_width="0dip"
+            android:layout_height="0dip" android:onClick="onSettings">
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/btn_settings"/>
+        </FrameLayout>
+        <FrameLayout
+            android:id="@+id/btnMap"
+            android:layout_width="0dip"
+            android:layout_height="0dip" android:onClick="onMap">
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/btn_map"/>
+        </FrameLayout>
+        <FrameLayout
+            android:id="@+id/btnDashboard"
+            android:layout_width="0dip"
+            android:layout_height="0dip" android:onClick="onDashboard">
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/btn_dashboard"/>
+        </FrameLayout>
+        <FrameLayout
+            android:id="@+id/btnList"
+            android:layout_width="0dip"
+            android:layout_height="0dip" android:onClick="onList">
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/btn_list"/>
+        </FrameLayout>
+        <FrameLayout
+            android:id="@+id/btnRefresh"
+            android:layout_width="0dip"
+            android:layout_height="0dip" android:onClick="onRefresh">
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/btn_refresh"/>
+        </FrameLayout>
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/menuButtonFrame"
+        android:layout_width="0dip"
+        android:layout_height="0dip">
+
+        <ImageView
+            android:id="@+id/menuButton"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/menu_btn"/>
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/demoWebUi"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#99000000"
+        android:clickable="true"
+        android:visibility="invisible"
+        android:onClick="hideDemoUi">
+
+        <FrameLayout
+            android:id="@+id/demoWebRound"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/rounded"
+            >
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/demoWeb"
+            android:visibility="invisible"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <com.clickntap.tap.web.TapWebView
+                android:id="@+id/demoWebView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/demoGoogleMap"
+            android:visibility="invisible"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <fragment
+                android:id="@+id/googleMap"
+                android:name="com.google.android.gms.maps.MapFragment"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+            <FrameLayout
+                android:id="@+id/hairCrossMap"
+                android:layout_width="0dip"
+                android:layout_height="0dip"
+                android:onClick="sendLocation">
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/hair_cross"/>
+            </FrameLayout>
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/btnCloseDemoWebUi"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/btn_close"/>
+        </FrameLayout>
+
+
+
+    </FrameLayout>
+
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#99ffffff"
+        android:clickable="true"
+        android:visibility="gone"
+        android:id="@+id/progressBar">
+
+        <ProgressBar
+            style="?android:attr/progressBarStyleLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:indeterminateTint="#000000" />
+    </FrameLayout>
+
+</FrameLayout>
