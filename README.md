@@ -26,7 +26,9 @@ To run the example project, clone the repo, and build it.
 	<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 	<uses-permission android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION"/>
 	
+	
 	...
+	
 	
 	<activity
             android:name="eu.neosurance.app.NSRActivityWebView"
