@@ -75,22 +75,21 @@ Step 2. Add the dependency
 1. Init
 
 ```java
-    NSMutableDictionary* settings = [[NSMutableDictionary alloc] init];
-    [settings setObject:@"https://sandbox.neosurancecloud.net/sdk/api/v1.0/" forKey:@"base_url"];
-    [settings setObject:@"xxxx" forKey:@"code"];
-    [settings setObject:@"xxxx" forKey:@"secret_key"];
-    [[NeosuranceSDK sharedInstance] setupWithDictionary:settings navigationController:navigationController];
-    [[NeosuranceSDK sharedInstance] stayInBackground];
+	JSONObject configuration = new JSONObject();
+	configuration.put("base_url", "https://sandbox.neosurancecloud.net/sdk/api/v1.0/");
+	configuration.put("code", "xxxx");
+	configuration.put("secret_key", "xxxx");
+	NSR.getInstance().setup(configuration, this);
 ```
 2. setUser
 
 ```java
-    NSRUser* user = [[NSRUser alloc] init];
-    user.email = @"jhon.doe@acme.com";
-    user.code = @"jhon.doe@acme.com";
-    user.firstname = @"Jhon";
-    user.lastname = @"Doe";
-    [[NeosuranceSDK sharedInstance] registerUser:user];
+	NSRUser user = new NSRUser();
+	user.setEmail("jhon.doe@acme.com");
+	user.setCode("jhon.doe@acme.com");
+	user.setFirstName("Jhon");
+	user.setLastName("Doe");
+	NSR.getInstance().registerUser(user);
 ```
 
 ## Author
