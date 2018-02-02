@@ -94,6 +94,24 @@ Step 2. Add the dependency
 	NSR.getInstance().registerUser(user);
 ```
 
+3. showApp
+
+```java
+	NSR.getInstance().showApp(Context ctx);
+ ```
+
+5. customEvent
+
+ ```java          
+ 	NSR.getInstance().sendCustomEvent(Context context, String name, JSONObject payload);
+	//position example
+	JSONObject payload = new JSONObject();
+	payload.put("latitude", latitude);
+	payload.put("longitude", longitude);
+	NSR.getInstance().sendCustomEvent(this, "position", payload);
+
+ ```
+
 ## Author
 
 Giovanni Tigli, giovanni.tigli@neosurance.eu
