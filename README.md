@@ -103,13 +103,12 @@ Step 2. Add the dependency
 5. customEvent
 
  ```java          
- 	NSR.getInstance().sendCustomEvent(Context context, String name, JSONObject payload);
+	NSR.getInstance().sendCustomEvent(Context context, String name, JSONObject payload);
 	//position example
 	JSONObject payload = new JSONObject();
 	payload.put("latitude", latitude);
 	payload.put("longitude", longitude);
 	NSR.getInstance().sendCustomEvent(this, "position", payload);
-
  ```
 
 ## Author
