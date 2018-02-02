@@ -1,6 +1,7 @@
 package eu.neosurance.app;
 
 import android.app.Application;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -169,11 +170,6 @@ public class NSR {
             setUser(user);
             authorize(new NSRAuth() {
                  public void authorized(boolean authorized) throws Exception {
-//                 Log.d("nsr", "registerReceivers");
-//                 try{
-//                     ((DemoActivity) ctx).registerReceivers();
-//                 }catch(Exception e){
-//                 }
                 }
             });
            }
@@ -195,5 +191,19 @@ public class NSR {
             editor.remove(key);
         }
         editor.commit();
+    }
+
+    public void showApp(Context context) throws Exception {
+        Intent intent = new Intent(context, NSRActivityWebView.class);
+        JSONObject json = new JSONObject();
+        JSONObject settings = NSR.getInstance().getAuthSettings();
+        json.put("url", settings.getString("app_url"));
+        intent.putExtra("json", json.toString());
+        context.startActivity(intent);
+    }
+
+    public void  sendCustomEvent(Context context, String name, JSONObject payload) throws Exception {
+        NSRRequest request = new NSRRequest(NSRUtils.makeEvent(name, payload));
+        request.send(context);
     }
 }

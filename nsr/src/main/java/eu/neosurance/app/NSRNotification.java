@@ -1,12 +1,17 @@
 package eu.neosurance.app;
 
+import android.app.Activity;
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.net.Uri;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
 import android.util.Log;
 
 import com.loopj.android.http.AsyncHttpClient;
@@ -73,20 +78,32 @@ public class NSRNotification {
     }
 
     private static Notification.Builder buildNotification(Context ctx, int icon, String title, String message){
-        Notification.Builder notification = new Notification.Builder(ctx)
-                .setSmallIcon(icon)
-                .setContentTitle(title)
-                .setContentText(message)
-                .setStyle(new Notification.BigTextStyle().bigText(message))
-                .setLights(Color.BLUE, 500, 500)
-                .setVibrate(new long[] {500,500,500})
-                //.setSound(Uri.parse("android.resource://" + activity.getPackageName() + "/" + R.raw.push))
-                .setAutoCancel(true);
+        Notification.Builder notification = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            notification = new Notification.Builder(ctx)
+                    .setSmallIcon(icon)
+                    .setContentTitle(title)
+                    .setContentText(message)
+                    .setStyle(new Notification.BigTextStyle().bigText(message))
+                    .setLights(Color.BLUE, 500, 500)
+                    .setVibrate(new long[] {500,500,500})
+                    .setVisibility(Notification.VISIBILITY_PUBLIC)
+                    .setPriority(Notification.PRIORITY_HIGH)
+
+                    //.setSound(Uri.parse("android.resource://" + activity.getPackageName() + "/" + R.raw.push))
+                    .setAutoCancel(true);
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            notification.setChannelId("nsr");
+        }
         return notification;
     }
 
     private static void showNotification(Context ctx, Notification.Builder notification){
         NotificationManager notificationManager = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            notificationManager.createNotificationChannel(new NotificationChannel("nsr", "nsrchannel", NotificationManager.IMPORTANCE_HIGH));
+        }
         notificationManager.notify( (int) System.currentTimeMillis(), notification.build());
     }
 }
