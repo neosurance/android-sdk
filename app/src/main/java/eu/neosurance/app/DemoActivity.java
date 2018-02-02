@@ -457,14 +457,9 @@ public class DemoActivity extends AppActivity implements View.OnTouchListener {
         showDemoUi(8);
     }
 
-    public void onHands(View view) throws JSONException {
+    public void onHands(View view) throws Exception {
         playBtnSound();
-        Intent intent = new Intent(this, NSRActivityWebView.class);
-        JSONObject json = new JSONObject();
-        JSONObject settings = NSR.getInstance().getAuthSettings();
-        json.put("url", settings.getString("app_url"));
-        intent.putExtra("json", json.toString());
-        startActivity(intent);
+        NSR.getInstance().showApp(this);
     }
 
     public void onBattery(View view) {
@@ -492,8 +487,7 @@ public class DemoActivity extends AppActivity implements View.OnTouchListener {
             JSONObject payload = new JSONObject();
             payload.put("latitude", latitude);
             payload.put("longitude", longitude);
-            NSRRequest request = new NSRRequest(NSRUtils.makeEvent("position", payload));
-            request.send(DemoActivity.this);
+            NSR.getInstance().sendCustomEvent(this, "position", payload);
         } catch (Exception error) {
         }
     }

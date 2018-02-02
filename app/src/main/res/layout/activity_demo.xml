@@ -193,7 +193,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:indeterminateTint="#000000" />
+            android:indeterminateTint="#7C0F05" />
     </FrameLayout>
 
 </FrameLayout>
