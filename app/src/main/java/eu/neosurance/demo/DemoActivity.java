@@ -366,7 +366,7 @@ public class DemoActivity extends AppActivity implements View.OnTouchListener {
                             Address address = DemoActivity.getAddress(getApplicationContext(), googleMap.getCameraPosition().target.latitude, googleMap.getCameraPosition().target.longitude);
                             if (address != null) {
                                 latitude = googleMap.getCameraPosition().target.latitude;
-                                longitude = googleMap.getCameraPosition().target.latitude;
+                                longitude = googleMap.getCameraPosition().target.longitude;
                                 tts.speak(address.getCountryName(), TextToSpeech.QUEUE_FLUSH, null, null);
                             }
                         }
