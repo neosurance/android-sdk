@@ -1,4 +1,4 @@
-package eu.neosurance.app;
+package eu.neosurance.demo;
 
 import com.clickntap.tap.App;
 

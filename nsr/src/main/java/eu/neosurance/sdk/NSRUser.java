@@ -1,4 +1,4 @@
-package eu.neosurance.app;
+package eu.neosurance.sdk;
 
 
 import org.json.JSONObject;

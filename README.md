@@ -31,17 +31,17 @@ To run the example project, clone the repo, and build it.
 
 
 	<activity
-		android:name="eu.neosurance.app.NSRActivityWebView"
+		android:name="eu.neosurance.sdk.NSRActivityWebView"
 		android:theme="@style/AppTheme.NoActionBar"
 		android:configChanges="orientation|screenSize|keyboardHidden"
 		android:screenOrientation="portrait">
 	</activity>
 	<service
-		android:name="eu.neosurance.app.NSRActivityRecognitionService"
+		android:name="eu.neosurance.sdk.NSRActivityRecognitionService"
 		android:exported="false">
 	</service>
 	<service
-		android:name="eu.neosurance.app.NSRJobService"
+		android:name="eu.neosurance.sdk.NSRJobService"
 		android:permission="android.permission.BIND_JOB_SERVICE"
 		android:exported="false">
 	</service>

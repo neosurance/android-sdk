@@ -1,8 +1,7 @@
-package eu.neosurance.app;
+package eu.neosurance.sdk;
 
 import android.app.Activity;
 import android.app.Notification;
-import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -93,17 +92,17 @@ public class NSRNotification {
                     //.setSound(Uri.parse("android.resource://" + activity.getPackageName() + "/" + R.raw.push))
                     .setAutoCancel(true);
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            notification.setChannelId("nsr");
-        }
+        //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        //    notification.setChannelId("nsr");
+        //}
         return notification;
     }
 
     private static void showNotification(Context ctx, Notification.Builder notification){
         NotificationManager notificationManager = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            notificationManager.createNotificationChannel(new NotificationChannel("nsr", "nsrchannel", NotificationManager.IMPORTANCE_HIGH));
-        }
+        //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        //    notificationManager.createNotificationChannel(new NotificationChannel("nsr", "nsrchannel", NotificationManager.IMPORTANCE_HIGH));
+        //}
         notificationManager.notify( (int) System.currentTimeMillis(), notification.build());
     }
 }

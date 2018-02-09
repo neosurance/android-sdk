@@ -4,12 +4,11 @@ android {
     compileSdkVersion 25
     buildToolsVersion '26.0.2'
     defaultConfig {
-        applicationId "eu.neosurance.sdk"
+        applicationId "eu.neosurance.demo"
         minSdkVersion 23
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         resValue "string", "google_maps_key",  (project.findProperty("GOOGLE_MAPS_API_KEY") ?: "")
     }
     buildTypes {

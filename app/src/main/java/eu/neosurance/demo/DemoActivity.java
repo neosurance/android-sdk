@@ -1,4 +1,4 @@
-package eu.neosurance.app;
+package eu.neosurance.demo;
 
 import android.Manifest;
 import android.app.Activity;
@@ -57,6 +57,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import eu.neosurance.sdk.*;
 
 public class DemoActivity extends AppActivity implements View.OnTouchListener {
     private static final int PERMISSIONS_MULTIPLE_REQUEST = 123;

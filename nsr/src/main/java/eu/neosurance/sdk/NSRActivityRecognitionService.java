@@ -1,4 +1,4 @@
-package eu.neosurance.app;
+package eu.neosurance.sdk;
 
 import android.app.IntentService;
 import android.content.Intent;
