@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+/Users/tmendici/Library/Android/sdk/platform-tools/adb logcat | grep tapp
