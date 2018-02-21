@@ -41,6 +41,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -272,7 +273,7 @@ public class NSR {
             setSettings(settings);
             if(settings.has("base_demo_url")) {
                 JSONObject demoSettings = getDemoSettings();
-                String demoCode = demoSettings.has("code") ? demoSettings.getString("code") : "";
+                final String demoCode = demoSettings.has("code") ? demoSettings.getString("code") : "";
                 final String url = getSettings().getString("base_demo_url") + demoCode;
                 Log.d("nsr", "url "+url);
                 Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -346,16 +347,19 @@ public class NSR {
         showApp(null);
     }
 
-    public void showApp(Map<String, String> params) throws Exception {
+    public void showApp(JSONObject params) throws Exception {
         String url = getAuthSettings().getString("app_url")+"?";
-        if(params != null && params.size() > 0){
-            for(Map.Entry<String, String> entry :  params.entrySet()){
-                url += entry.getKey()+"="+URLEncoder.encode(entry.getValue(), "UTF-8")+"&";
+        if(params != null && params.length() > 0){
+            Iterator<String> keys = params.keys();
+            while(keys.hasNext()){
+                String key =  keys.next();
+                url += key+"="+URLEncoder.encode(params.getString(key), "UTF-8")+"&";
             }
             url = url.substring(0, url.length()-1);
         }
         Intent intent = new Intent(ctx, NSRActivityWebView.class);
         JSONObject json = new JSONObject();
+        Log.d(NSR.TAG, "url "+url);
         json.put("url", url);
         intent.putExtra("json", json.toString());
         ctx.startActivity(intent);
@@ -368,44 +372,14 @@ public class NSR {
     }
 
     public void takePicture(final Activity activity){
-        if (ActivityCompat.checkSelfPermission(ctx, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED ||
-            ActivityCompat.checkSelfPermission(ctx, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.CAMERA) ||
-                ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-                AlertDialog alertDialog = new AlertDialog.Builder(ctx).create();
-                alertDialog.setTitle("Camera Permissions");
-                alertDialog.setCancelable(false);
-                alertDialog.setMessage("Please Grant Permissions");
-                alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "Allow",
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                final List<String> permissionsList = new ArrayList<String>();
-                                NSRUtils.addPermission(ctx, permissionsList, Manifest.permission.CAMERA);
-                                NSRUtils.addPermission(ctx, permissionsList, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-                                if (permissionsList.size() > 0) {
-                                    ActivityCompat.requestPermissions(activity, permissionsList.toArray(new String[permissionsList.size()]), PERMISSIONS_MULTIPLE_IMAGECAPTURE);
-                                }
-                            }
-                        });
-                alertDialog.show();
-            } else {
-                final List<String> permissionsList = new ArrayList<String>();
-                NSRUtils.addPermission(ctx, permissionsList, Manifest.permission.CAMERA);
-                NSRUtils.addPermission(ctx, permissionsList, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-                if (permissionsList.size() > 0) {
-                    ActivityCompat.requestPermissions(activity, permissionsList.toArray(new String[permissionsList.size()]), PERMISSIONS_MULTIPLE_IMAGECAPTURE);
-                }
+        try{
+            Intent mIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            if (mIntent.resolveActivity(ctx.getPackageManager()) != null) {
+                mIntent.putExtra(MediaStore.EXTRA_OUTPUT, FileProvider.getUriForFile(ctx, ctx.getPackageName()+".provider", getFileTemp()));
+                activity.startActivityForResult(mIntent, REQUEST_IMAGE_CAPTURE);
             }
-        } else{
-            try{
-                Intent mIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                if (mIntent.resolveActivity(ctx.getPackageManager()) != null) {
-                    mIntent.putExtra(MediaStore.EXTRA_OUTPUT, FileProvider.getUriForFile(ctx, ctx.getPackageName()+".provider", getFileTemp()));
-                    activity.startActivityForResult(mIntent, REQUEST_IMAGE_CAPTURE);
-                }
-            }catch(Exception e){
-                Log.d(NSR.TAG, e.toString());
-            }
+        }catch(Exception e){
+            Log.d(NSR.TAG, e.toString());
         }
     }
 
