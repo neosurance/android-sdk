@@ -92,13 +92,13 @@
                 android:src="@drawable/btn_list"/>
         </FrameLayout>
         <FrameLayout
-            android:id="@+id/btnRefresh"
+            android:id="@+id/btnCamera"
             android:layout_width="0dip"
-            android:layout_height="0dip" android:onClick="onRefresh">
+            android:layout_height="0dip" android:onClick="onCamera">
             <ImageView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:src="@drawable/btn_refresh"/>
+                android:src="@drawable/btn_camera"/>
         </FrameLayout>
     </FrameLayout>
 

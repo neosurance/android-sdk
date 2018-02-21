@@ -2,22 +2,35 @@ package eu.neosurance.demo;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.media.MediaPlayer;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.Handler;
+import android.provider.MediaStore;
 import android.speech.tts.TextToSpeech;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.FileProvider;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AlertDialog;
+import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -28,21 +41,14 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationSet;
 import android.view.animation.RotateAnimation;
 import android.view.animation.ScaleAnimation;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 
 import com.clickntap.tap.AppActivity;
 import com.clickntap.tap.web.TapWebView;
 import com.clickntap.tap.web.TapWebViewDelegate;
-import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.LocationSettingsResponse;
-import com.google.android.gms.location.LocationSettingsStatusCodes;
-import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
@@ -57,12 +63,16 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
 import eu.neosurance.sdk.*;
 
 public class DemoActivity extends AppActivity implements View.OnTouchListener {
+    private static final int REQUEST_IMAGE_CAPTURE = 0x1256;
+    private static final String FILENAME_IMAGE_CAPTURE = "nsr-photo.jpg";
     private static final int PERMISSIONS_MULTIPLE_REQUEST = 123;
-    private static final int UPDATE_INTERVAL_IN_MILLISECONDS = 10000;
-    private static final int FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = UPDATE_INTERVAL_IN_MILLISECONDS / 2;
+    private static final int PERMISSIONS_MULTIPLE_IMAGECAPTURE = 0x1616;
+    //private static final int UPDATE_INTERVAL_IN_MILLISECONDS = 10000;
+    //private static final int FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = UPDATE_INTERVAL_IN_MILLISECONDS / 2;
     private static final int REQUEST_CHECK_SETTINGS = 0x1;
 
     private TapWebView webView;
@@ -86,11 +96,8 @@ public class DemoActivity extends AppActivity implements View.OnTouchListener {
     private double longitude = -1;
 
     private FusedLocationProviderClient fusedLocationClient;
-    private SettingsClient settingsClient;
-    private LocationRequest locationRequest;
-    private LocationSettingsRequest locationSettingsRequest;
-    private LocationCallback locationCallback;
     private Location currentLocation;
+    private String resultCallback = null;
 
     public void playPushSound() {
         pushSound.seekTo(0);
@@ -119,12 +126,27 @@ public class DemoActivity extends AppActivity implements View.OnTouchListener {
     }
 
     private BroadcastReceiver settingsReceiver = new BroadcastReceiver() {
-
         public void onReceive(Context context, Intent intent) {
             try {
                 JSONObject settings = new JSONObject(intent.getExtras().getString("json"));
                 webView = (TapWebView) findViewById(R.id.webView);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                    webView.setWebContentsDebuggingEnabled(true);
+                }
                 webView.loadUrl(settings.getString("url"));
+                webView.setWebViewClient(new WebViewClient(){
+                    public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                        if(url.endsWith(".pdf")){
+                            Intent intent = new Intent(Intent.ACTION_VIEW);
+                            intent.setDataAndType(Uri.parse(url), "application/pdf");
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+                            startActivity(intent);
+                            return true;
+                        }else{
+                            return false;
+                        }
+                    }
+                });
             } catch (JSONException e) {
                 Log.e("nsr", e.getMessage(), e);
             }
@@ -136,15 +158,27 @@ public class DemoActivity extends AppActivity implements View.OnTouchListener {
             try {
                 JSONObject body = new JSONObject(intent.getExtras().getString("json"));
                 if (!body.has("what")) {
-                    if ("refresh".equals(body.getString("event"))) {
-                        onRefresh(null);
-                    } else {
-                        NSRRequest request = new NSRRequest(NSRUtils.makeEvent(body.getString("event"), body.getJSONObject("payload")));
-                        request.send(DemoActivity.this);
+                    NSR.getInstance(DemoActivity.this).sendCustomEvent(body.getString("event"), body.getJSONObject("payload"));
+                }else{
+                    if ("refresh".equals(body.getString("what"))) {
+                        NSR.getInstance(DemoActivity.this).resetAll();
+                        finish();
+                        startActivity(getIntent());
+                    }else if ("photo".equals(body.getString("what"))) {
+                        resultCallback = body.getString("callback");
+                        if(resultCallback != null){
+                            NSR.getInstance(DemoActivity.this).takePicture(DemoActivity.this);
+                        }
+                    }else if ("location".equals(body.getString("what"))) {
+                        JSONObject location = NSR.getInstance(DemoActivity.this).getCurrentLocation();
+                        if(body.has("callback") && location.has("latitude") && location.has("longitude")){
+                            demoWebView.evaluateJavascript(body.getString("callback")+"("+location.toString()+")",null);
+                        }
+
                     }
                 }
             } catch (Exception e) {
-                Log.e("nsr", e.getMessage(), e);
+                Log.d("nsr", e.getMessage(), e);
             }
         }
     };
@@ -162,6 +196,9 @@ public class DemoActivity extends AppActivity implements View.OnTouchListener {
 
         demoWebView = (TapWebView) findViewById(R.id.demoWebView);
         demoWebView.add(getApp(), this, "NSSdk");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            demoWebView.setWebContentsDebuggingEnabled(true);
+        }
         findViewById(R.id.menuButtonFrame).setOnTouchListener(this);
         setFrame(R.id.menuButtonFrame, 160, 160, 80, 80);
         setFrame(R.id.menuFrame, 100, 100, 200, 200);
@@ -172,7 +209,7 @@ public class DemoActivity extends AppActivity implements View.OnTouchListener {
         setFrame(R.id.btnMap, 75, 145, 50, 50);
         setFrame(R.id.btnDashboard, 25, 125, 50, 50);
         setFrame(R.id.btnList, 5, 75, 50, 50);
-        setFrame(R.id.btnRefresh, 25, 25, 50, 50);
+        setFrame(R.id.btnCamera, 25, 25, 50, 50);
         setFrame(R.id.demoWeb, (getDeviceWidth() - 300) / 2, (getDeviceHeight() - 400) / 2, 300, 400);
         setFrame(R.id.demoGoogleMap, (getDeviceWidth() - 300) / 2, (getDeviceHeight() - 400) / 2, 300, 400);
         setFrame(R.id.demoWebRound, (getDeviceWidth() - 340) / 2, (getDeviceHeight() - 440) / 2, 340, 440);
@@ -187,28 +224,38 @@ public class DemoActivity extends AppActivity implements View.OnTouchListener {
         try {
             registerReceiver(settingsReceiver, "NSRIncomingDemoSettings");
             registerReceiver(appjsReceiver, "appjs-notification");
+
             JSONObject configuration = new JSONObject();
             configuration.put("base_url", "https://sandbox.neosurancecloud.net/sdk/api/v1.0/");
             configuration.put("base_demo_url", "https://sandbox.neosurancecloud.net/demo/conf?code=");
-            NSR.getInstance().setup(configuration, this);
+            NSR.getInstance(this).setup(configuration);
         } catch (Exception e) {
             Log.e("nsr", e.getMessage(), e);
         }
 
+
+
+        checkPermissions();
+        initializeGPS();
         initializeSpeech();
         initializeMap();
-        //initializeGPS();
     }
 
 
+    protected void onDestroy() {
+        super.onDestroy();
+    }
+
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        NSR.getInstance(this).takePicture(this, requestCode);
+
         switch (requestCode) {
-            case PERMISSIONS_MULTIPLE_REQUEST: {
+            case PERMISSIONS_MULTIPLE_REQUEST:
                 if (grantResults.length > 0) {
                     boolean perm1 = grantResults[0] == PackageManager.PERMISSION_GRANTED;
                     boolean perm2 = grantResults[1] == PackageManager.PERMISSION_GRANTED;
                     if (perm1 && perm2) {
-                        //locationListener();
+                        initializeGPS();
                     } else {
                         AlertDialog alertDialog = new AlertDialog.Builder(this).create();
                         alertDialog.setTitle("Permissions");
@@ -216,8 +263,8 @@ public class DemoActivity extends AppActivity implements View.OnTouchListener {
                         alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "Allow", new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
                                 final List<String> permissionsList = new ArrayList<String>();
-                                addPermission(permissionsList, Manifest.permission.ACCESS_FINE_LOCATION);
-                                addPermission(permissionsList, Manifest.permission.ACCESS_COARSE_LOCATION);
+                                NSRUtils.addPermission(DemoActivity.this, permissionsList, Manifest.permission.ACCESS_FINE_LOCATION);
+                                NSRUtils.addPermission(DemoActivity.this, permissionsList, Manifest.permission.ACCESS_COARSE_LOCATION);
                                 if (permissionsList.size() > 0) {
                                     requestPermissions(permissionsList.toArray(new String[permissionsList.size()]), PERMISSIONS_MULTIPLE_REQUEST);
                                 }
@@ -226,20 +273,26 @@ public class DemoActivity extends AppActivity implements View.OnTouchListener {
                         alertDialog.show();
                     }
                 }
-                return;
-            }
+            break;
         }
     }
 
-    public void registerReceivers() {
-        //checkPermissions();
-        NSRJobService.schedule(getApplicationContext());
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        NSR.getInstance(this).pictureProcessed(this, new NSRUtils.NSRPictureProcessed() {
+            public void onStart(){
+                findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
+            }
+            public void onSuccess(String base64){
+                demoWebView.evaluateJavascript(resultCallback+"('"+base64+"')",null);
+                findViewById(R.id.progressBar).setVisibility(View.GONE);
+                resultCallback = null;
+            }
+        }, requestCode, resultCode);
     }
 
     private void checkPermissions() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION) ||
                     ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_COARSE_LOCATION)) {
                 AlertDialog alertDialog = new AlertDialog.Builder(this).create();
@@ -250,8 +303,8 @@ public class DemoActivity extends AppActivity implements View.OnTouchListener {
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
                                 final List<String> permissionsList = new ArrayList<String>();
-                                addPermission(permissionsList, Manifest.permission.ACCESS_FINE_LOCATION);
-                                addPermission(permissionsList, Manifest.permission.ACCESS_COARSE_LOCATION);
+                                NSRUtils.addPermission(DemoActivity.this, permissionsList, Manifest.permission.ACCESS_FINE_LOCATION);
+                                NSRUtils.addPermission(DemoActivity.this, permissionsList, Manifest.permission.ACCESS_COARSE_LOCATION);
                                 if (permissionsList.size() > 0) {
                                     requestPermissions(permissionsList.toArray(new String[permissionsList.size()]), PERMISSIONS_MULTIPLE_REQUEST);
                                 }
@@ -260,91 +313,22 @@ public class DemoActivity extends AppActivity implements View.OnTouchListener {
                 alertDialog.show();
             } else {
                 final List<String> permissionsList = new ArrayList<String>();
-                addPermission(permissionsList, Manifest.permission.ACCESS_FINE_LOCATION);
-                addPermission(permissionsList, Manifest.permission.ACCESS_COARSE_LOCATION);
+                NSRUtils.addPermission(this, permissionsList, Manifest.permission.ACCESS_FINE_LOCATION);
+                NSRUtils.addPermission(this, permissionsList, Manifest.permission.ACCESS_COARSE_LOCATION);
                 if (permissionsList.size() > 0) {
                     requestPermissions(permissionsList.toArray(new String[permissionsList.size()]), PERMISSIONS_MULTIPLE_REQUEST);
                 }
             }
-        } else {
-            //locationListener();
         }
     }
 
-    private void locationListener() {
-        settingsClient.checkLocationSettings(locationSettingsRequest)
-                .addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
-                    public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
-                        Log.d("nsr", "Tutte le impostazioni di posizione sono soddisfatte.");
-                        if (ActivityCompat.checkSelfPermission(DemoActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
-                                ActivityCompat.checkSelfPermission(DemoActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-
-                            fusedLocationClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
-                                public void onSuccess(Location location) {
-                                    if (location != null) {
-                                        if (!uiMapOpened && googleMap != null && latitude == -1 && longitude == -1) {
-                                            latitude = location.getLatitude();
-                                            longitude = location.getLongitude();
-                                            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 4));
-                                        }
-                                        onLocationChanged(location);
-                                    }
-                                }
-                            }).addOnFailureListener(new OnFailureListener() {
-                                public void onFailure(Exception e) {
-                                    Log.d("nsr", "Errore durante il tentativo di ottenere l'ultima posizione GPS");
-                                }
-                            });
-                            //fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper());
-                        }
-                    }
-                })
-                .addOnFailureListener(this, new OnFailureListener() {
-                    public void onFailure(Exception e) {
-                        int statusCode = ((ApiException) e).getStatusCode();
-                        switch (statusCode) {
-                            case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-                                Log.d("nsr", "Le impostazioni di posizione non sono soddisfatte. Tentativo di aggiornare le impostazioni di posizione");
-                                try {
-                                    ResolvableApiException rae = (ResolvableApiException) e;
-                                    rae.startResolutionForResult(DemoActivity.this, REQUEST_CHECK_SETTINGS);
-                                } catch (IntentSender.SendIntentException sie) {
-                                    Log.d("nsr", "PendingIntent non è in grado di eseguire la richiesta.");
-                                }
-                                break;
-                            case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                                Log.d("nsr", "Le impostazioni della posizione sono inadeguate e non possono essere corrette qui. Risolto nelle impostazioni.");
-                        }
-                    }
-                });
-    }
-
-    public void onLocationChanged(Location location) {
-        currentLocation = location;
-        Log.d("nsr", "coordinate: " + currentLocation.getLatitude() + "," + currentLocation.getLongitude());
-    }
-
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        switch (requestCode) {
-            case REQUEST_CHECK_SETTINGS:
-                switch (resultCode) {
-                    case Activity.RESULT_OK:
-                        Log.d("nsr", "L'utente ha accettato di apportare le modifiche alle impostazioni di posizione richieste.");
-                        break;
-                    case Activity.RESULT_CANCELED:
-                        Log.d("nsr", "L'utente ha scelto di non apportare le modifiche alle impostazioni di posizione richieste.");
-                        break;
-                }
-                break;
-        }
-    }
 
     private void initializeSpeech() {
         tts = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
             public void onInit(int status) {
-                if (status != TextToSpeech.ERROR) {
-                    tts.setLanguage(Locale.getDefault());
-                }
+            if (status != TextToSpeech.ERROR) {
+                tts.setLanguage(Locale.getDefault());
+            }
             }
         });
     }
@@ -363,7 +347,7 @@ public class DemoActivity extends AppActivity implements View.OnTouchListener {
                 googleMap.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
                     public void onCameraIdle() {
                         if (uiMapOpened) {
-                            Address address = DemoActivity.getAddress(getApplicationContext(), googleMap.getCameraPosition().target.latitude, googleMap.getCameraPosition().target.longitude);
+                            Address address = NSRUtils.getAddress(getApplicationContext(), googleMap.getCameraPosition().target.latitude, googleMap.getCameraPosition().target.longitude);
                             if (address != null) {
                                 latitude = googleMap.getCameraPosition().target.latitude;
                                 longitude = googleMap.getCameraPosition().target.longitude;
@@ -378,50 +362,35 @@ public class DemoActivity extends AppActivity implements View.OnTouchListener {
 
     private void initializeGPS() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        settingsClient = LocationServices.getSettingsClient(this);
-
-        locationCallback = new LocationCallback() {
-            public void onLocationResult(LocationResult locationResult) {
-                super.onLocationResult(locationResult);
-                if (locationResult.getLastLocation() != null) {
-                    onLocationChanged(locationResult.getLastLocation());
-                }
+        if(ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+           ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED){
+                fusedLocationClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
+                    public void onSuccess(Location location) {
+                        if (location != null) {
+                            onLocationChanged(location);
+                        }
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    public void onFailure(Exception e) {
+                        Log.d("nsr", "Errore durante il tentativo di ottenere l'ultima posizione GPS");
+                    }
+                });
             }
-        };
-
-        locationRequest = new LocationRequest();
-        locationRequest.setInterval(UPDATE_INTERVAL_IN_MILLISECONDS);
-        locationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-
-        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
-        builder.addLocationRequest(locationRequest);
-        locationSettingsRequest = builder.build();
     }
 
-
-    public static Address getAddress(Context ctx, double lat, double lng) {
-        try {
-            Geocoder geocoder = new Geocoder(ctx, Locale.getDefault());
-            return geocoder.getFromLocation(lat, lng, 1).get(0);
-        } catch (Exception error) {
+    public void onLocationChanged(Location location) {
+        currentLocation = location;
+        if (googleMap != null) {
+            latitude = location.getLatitude();
+            longitude = location.getLongitude();
+            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude, longitude), 4));
         }
-        return null;
     }
 
-    private boolean addPermission(List<String> permissionsList, String permission) {
-        if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
-            permissionsList.add(permission);
-            if (!shouldShowRequestPermissionRationale(permission)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private void showDemoUi(int n) {
+    private void showDemoUi(final int n) {
         uiOpened = true;
         demoWebView.evaluateJavascript("setPage(0);", null);
+        demoWebView.setOnloadCode("setContentData(" + NSR.getInstance(DemoActivity.this).getDemoSettings().toString() + ");setPage(" + n + ");");
         demoWebView.setDelegate(new TapWebViewDelegate() {
             public void onLoad() {
                 final AppActivity activity = DemoActivity.this;
@@ -429,7 +398,6 @@ public class DemoActivity extends AppActivity implements View.OnTouchListener {
                 spinner.setVisibility(View.GONE);
             }
         });
-        demoWebView.setOnloadCode("setContentData(" + NSR.getInstance().getDemoSettings().toString() + ");setPage(" + n + ");");
         demoWebView.loadUrl("file:///android_asset/appui.html");
         demoWebView.setVisibility(View.VISIBLE);
         playBtnSound();
@@ -458,9 +426,13 @@ public class DemoActivity extends AppActivity implements View.OnTouchListener {
         showDemoUi(8);
     }
 
+    public void onCamera(View view){
+        showDemoUi(9);
+    }
+
     public void onHands(View view) throws Exception {
         playBtnSound();
-        NSR.getInstance().showApp(this);
+        NSR.getInstance(this).showApp();
     }
 
     public void onBattery(View view) {
@@ -480,7 +452,6 @@ public class DemoActivity extends AppActivity implements View.OnTouchListener {
         findViewById(R.id.demoGoogleMap).setVisibility(View.VISIBLE);
         findViewById(R.id.demoWebUi).startAnimation(fade);
         findViewById(R.id.demoWebUi).setVisibility(View.VISIBLE);
-
     }
 
     public void sendLocation(View view) {
@@ -488,8 +459,9 @@ public class DemoActivity extends AppActivity implements View.OnTouchListener {
             JSONObject payload = new JSONObject();
             payload.put("latitude", latitude);
             payload.put("longitude", longitude);
-            NSR.getInstance().sendCustomEvent(this, "position", payload);
-        } catch (Exception error) {
+            NSR.getInstance(this).sendCustomEvent("position", payload);
+        } catch (Exception e) {
+            Log.d("nsr", e.getMessage(), e);
         }
     }
 
@@ -501,11 +473,7 @@ public class DemoActivity extends AppActivity implements View.OnTouchListener {
         showDemoUi(6);
     }
 
-    public void onRefresh(View view) {
-        NSR.getInstance().setData("demo_code", "");
-        finish();
-        startActivity(getIntent());
-    }
+
 
     public boolean onTouch(View view, MotionEvent motionEvent) {
         DisplayMetrics metrics = new DisplayMetrics();
