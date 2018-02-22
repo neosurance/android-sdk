@@ -36,17 +36,15 @@ import java.util.Locale;
 
 import eu.neosurance.sdk.NSR;
 import eu.neosurance.sdk.NSRUtils;
-
 public class CustomDemoActivity extends AppActivity  implements View.OnTouchListener {
 
     // private static final int REQUEST_IMAGE_CAPTURE = 0x1256;
-//    private static final String FILENAME_IMAGE_CAPTURE = "nsr-photo.jpg";
-    //private static final int PERMISSIONS_MULTIPLE_REQUEST = 123;
-//    private static final int PERMISSIONS_MULTIPLE_IMAGECAPTURE = 0x1616;
-    //private static final int UPDATE_INTERVAL_IN_MILLISECONDS = 10000;
-    //private static final int FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = UPDATE_INTERVAL_IN_MILLISECONDS / 2;
-    //private static final int REQUEST_CHECK_SETTINGS = 0x1;
-
+    // private static final String FILENAME_IMAGE_CAPTURE = "nsr-photo.jpg";
+    // private static final int PERMISSIONS_MULTIPLE_REQUEST = 123;
+    // private static final int PERMISSIONS_MULTIPLE_IMAGECAPTURE = 0x1616;
+    // private static final int UPDATE_INTERVAL_IN_MILLISECONDS = 10000;
+    // private static final int FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = UPDATE_INTERVAL_IN_MILLISECONDS / 2;
+    // private static final int REQUEST_CHECK_SETTINGS = 0x1;
 
     protected static final int PERMISSIONS_MULTIPLE_ACCESSLOCATION = 0x2043;
     protected static final int PERMISSIONS_MULTIPLE_IMAGECAPTURE = 0x2049;

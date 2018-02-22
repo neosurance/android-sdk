@@ -9,6 +9,7 @@ import com.google.android.gms.location.DetectedActivity;
 
 
 public class NSRActivityRecognitionService extends IntentService {
+    public static final String ACTION = "NSRActivityRecognition";
 
     public NSRActivityRecognitionService() {
         super("NSRDetectedActivities");
@@ -22,7 +23,7 @@ public class NSRActivityRecognitionService extends IntentService {
                 String type = getType(mostProbable.getType());
                 if(!"".equals(type)){
                     Intent i = new Intent();
-                    i.setAction("NSRActivityRecognition");
+                    i.setAction(ACTION);
                     i.putExtra("activity", type);
                     i.putExtra("conficende", mostProbable.getConfidence());
                     sendBroadcast(i);

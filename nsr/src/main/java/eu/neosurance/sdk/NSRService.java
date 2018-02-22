@@ -88,7 +88,7 @@ public class NSRService extends IntentService {
             try{
                 this.context = context;
                 this.conf = NSR.getInstance(context).getAuthSettings().getJSONObject("conf");
-                context.getApplicationContext().registerReceiver(activitiesReceiver, new IntentFilter("NSRActivityRecognition"));
+                context.getApplicationContext().registerReceiver(activitiesReceiver, new IntentFilter(NSRActivityRecognitionService.ACTION));
                 if (GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS) {
                     activitiesClient = ActivityRecognition.getClient(context);
                     Intent intent = new Intent(context, NSRActivityRecognitionService.class);

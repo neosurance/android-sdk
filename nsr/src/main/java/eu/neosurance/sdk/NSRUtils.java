@@ -51,9 +51,4 @@ public class NSRUtils {
         }
         return false;
     }
-
-    public interface NSRPictureProcessed {
-        public void onStart();
-        public void onSuccess(String base64);
-    }
 }

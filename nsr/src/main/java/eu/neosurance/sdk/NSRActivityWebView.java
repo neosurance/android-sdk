@@ -23,6 +23,7 @@ import org.json.JSONObject;
 
 public class NSRActivityWebView extends AppActivity {
     private TapWebView webView;
+    private NSRCallbackManager callbackManager;
     private String resultCallback;
 
     public void onCreate(Bundle savedInstanceState) {
@@ -52,6 +53,20 @@ public class NSRActivityWebView extends AppActivity {
                     }
                 }
             });
+
+            callbackManager = NSRCallbackManager.Factory.create();
+            NSR.getInstance(this).registerCallback(callbackManager, new NSRBase64Image.Callback() {
+                public void onSuccess(String base64Image) {
+                    webView.evaluateJavascript(resultCallback+"('"+base64Image+"')",null);
+                    findViewById(R.id.progressBar).setVisibility(View.GONE);
+                }
+                public void onCancel() {
+                    findViewById(R.id.progressBar).setVisibility(View.GONE);
+                }
+                public void onError() {
+                }
+            });
+
             idle();
         } catch (Exception e) {
             Log.e("nsr", e.getMessage(), e);
@@ -78,31 +93,42 @@ public class NSRActivityWebView extends AppActivity {
                     }
                     if ("close".equals(body.getString("what"))) {
                         finish();
-                    }
-                    if ("refresh".equals(body.getString("what"))) {
+                    }else if ("refresh".equals(body.getString("what"))) {
                         NSR.getInstance(NSRActivityWebView.this).resetAll();
                         finish();
                         startActivity(getIntent());
-                    }
-                    if ("photo".equals(body.getString("what"))) {
-                        resultCallback = body.getString("callBack");
-                        if(resultCallback != null){
-                            NSR.getInstance(NSRActivityWebView.this).takePicture(NSRActivityWebView.this);
+                    }else if ("photo".equals(body.getString("what"))) {
+                        if(body.has("callBack")){
+                            resultCallback = body.getString("callBack");
+                            NSR.getInstance(NSRActivityWebView.this).takePicture();
                         }
-                    }
-                    if ("location".equals(body.getString("what"))) {
+                    }else if ("location".equals(body.getString("what"))) {
                         JSONObject location = NSR.getInstance(NSRActivityWebView.this).getCurrentLocation();
                         if(body.has("callBack") && location.has("latitude") && location.has("longitude")){
                             webView.evaluateJavascript(body.getString("callBack")+"("+location.toString()+")",null);
                         }
-
+                    }else if ("code".equals(body.getString("what"))) {
+                        if(body.has("callBack")) {
+                            final String code = NSR.getInstance(NSRActivityWebView.this).getDemoSettings().getString("code");
+                            webView.evaluateJavascript(body.getString("callBack")+"('"+code+"')",null);
+                        }
+                    }else if("showapp".equals(body.getString("what"))){
+                        if(body.has("params")){
+                            NSR.getInstance(NSRActivityWebView.this).showApp(body.getJSONObject("params"));
+                        }else{
+                            NSR.getInstance(NSRActivityWebView.this).showApp();
+                        }
                     }
                 }
             } catch (Exception e) {
-                Log.e("nsr", e.getMessage(), e);
+                Log.e(NSR.TAG, e.getMessage());
             }
         }
     };
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        callbackManager.onActivityResult(requestCode, resultCode, data);
+    }
 
     private void idle(){
         new Handler().postDelayed(new Runnable() {
@@ -119,18 +145,4 @@ public class NSRActivityWebView extends AppActivity {
             }
         },15*1000);
     }
-
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        NSR.getInstance(this).pictureProcessed(this, new NSRUtils.NSRPictureProcessed() {
-            public void onStart(){
-                findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
-            }
-            public void onSuccess(String base64){
-                webView.evaluateJavascript(resultCallback+"('"+base64+"')",null);
-                findViewById(R.id.progressBar).setVisibility(View.GONE);
-                resultCallback = null;
-            }
-        }, requestCode, resultCode);
-    }
-
 }

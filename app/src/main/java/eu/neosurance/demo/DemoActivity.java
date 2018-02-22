@@ -61,6 +61,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -70,9 +71,13 @@ import java.util.Map;
 import eu.neosurance.sdk.*;
 
 public class DemoActivity extends CustomDemoActivity{
+    private NSRCallbackManager callbackManager;
+
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_demo);
+        registerReceiver(settingsReceiver, "NSRIncomingDemoSettings");
+
         loadUi();
         initializeGPS();
         initializeSpeech();
@@ -85,32 +90,31 @@ public class DemoActivity extends CustomDemoActivity{
 
     public void initializeSDK(){
         try {
-            registerReceiver(settingsReceiver, "NSRIncomingDemoSettings");
             JSONObject configuration = new JSONObject();
             configuration.put("base_url", "https://sandbox.neosurancecloud.net/sdk/api/v1.0/");
             configuration.put("base_demo_url", "https://sandbox.neosurancecloud.net/demo/conf?code=");
             NSR.getInstance(this).setup(configuration);
+
+            callbackManager = NSRCallbackManager.Factory.create();
+            NSR.getInstance(this).registerCallback(callbackManager, new NSRBase64Image.Callback() {
+                public void onSuccess(String base64Image) {
+                    NSR.getInstance(DemoActivity.this).setData("base64Image", base64Image);
+                    Intent intent = new Intent();
+                    intent.setAction(DemoReceiver.ACTION_DEMO_RECEIVER);
+                    intent.putExtra("service", "base64Image");
+                    sendBroadcast(intent);
+                    findViewById(R.id.progressBar).setVisibility(View.GONE);
+                }
+                public void onCancel() {
+                    findViewById(R.id.progressBar).setVisibility(View.GONE);
+                    Log.d(NSR.TAG, "onCancel");
+                }
+                public void onError() {
+                    Log.d(NSR.TAG, "onError");
+                }
+            });
         } catch (Exception e) {
-            Log.e("nsr", e.getMessage(), e);
-        }
-    }
-
-    public void refreshApp(){
-        try{
-            NSR.getInstance(this).resetAll();
-            finish();
-            startActivity(getIntent());
-        }catch(Exception e){
-        }
-    }
-
-    public void takePhoto(JSONObject json){
-        try{
-            if(json.has("callBack")){
-                resultCallback = json.getString("callBack");
-                takePhotoRequestPermissions();
-            }
-        }catch(Exception e){
+            Log.d(NSR.TAG, e.getMessage(), e);
         }
     }
 
@@ -164,7 +168,7 @@ public class DemoActivity extends CustomDemoActivity{
         }
     }
 
-    protected void takePhotoRequestPermissions() {
+    public void takePhotoRequestPermissions() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED ||
             ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA) ||
@@ -193,7 +197,8 @@ public class DemoActivity extends CustomDemoActivity{
                 }
             }
         } else {
-            NSR.getInstance(this).takePicture(this);
+            NSR.getInstance(this).takePicture();
+            findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
         }
     }
 
@@ -207,25 +212,13 @@ public class DemoActivity extends CustomDemoActivity{
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        NSR.getInstance(this).pictureProcessed(this, new NSRUtils.NSRPictureProcessed() {
-            public void onStart(){
-                findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
-            }
-            public void onSuccess(String base64Image){
-                if(resultCallback != null){
-                    demoWebView.evaluateJavascript(resultCallback+"('"+base64Image+"')",null);
-                    findViewById(R.id.progressBar).setVisibility(View.GONE);
-                    resultCallback = null;
-                }
-            }
-        }, requestCode, resultCode);
+        callbackManager.onActivityResult(requestCode, resultCode, data);
     }
 
     private BroadcastReceiver settingsReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             try {
                 JSONObject settings = new JSONObject(intent.getExtras().getString("json"));
-                //findViewById(R.id.menuButtonFrame).setVisibility(View.VISIBLE);
                 if(!settings.has("hideWheel") || settings.getInt("hideWheel") == 0){
                     findViewById(R.id.menuButtonFrame).setVisibility(View.VISIBLE);
                 }
@@ -249,28 +242,10 @@ public class DemoActivity extends CustomDemoActivity{
                     }
                 });
             } catch (JSONException e) {
-                Log.e("nsr", e.getMessage(), e);
+                Log.e(NSR.TAG, e.getMessage(), e);
             }
         }
     };
-
-    //private NSRCallbackManager callbackManager = NSRCallbackManager.Factory.create();
-//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        //callbackManager.onActivityResult(requestCode, resultCode, data);
-//        NSR.getInstance(this).pictureProcessed(this, new NSRUtils.NSRPictureProcessed() {
-//            public void onStart(){
-//                findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
-//            }
-//            public void onSuccess(String base64){
-//                if(resultCallback != null){
-//                    demoWebView.evaluateJavascript(resultCallback+"('"+base64+"')",null);
-//                    findViewById(R.id.progressBar).setVisibility(View.GONE);
-//                    resultCallback = null;
-//                }
-//            }
-//        }, requestCode, resultCode);
-//    }
-
 
 
 }

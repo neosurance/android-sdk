@@ -1,66 +1,33 @@
 package eu.neosurance.sdk;
 
-import android.Manifest;
+
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.Application;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.location.Address;
-import android.location.Geocoder;
-import android.location.Location;
-import android.location.LocationManager;
-import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
-import android.provider.MediaStore;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.FileProvider;
-import android.support.v7.app.AlertDialog;
-import android.util.Base64;
 import android.util.Log;
-import android.view.View;
-
-import com.clickntap.tap.web.TapWebView;
 import com.google.gson.Gson;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 
 import org.json.JSONObject;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.net.URLEncoder;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 import cz.msebera.android.httpclient.Header;
-import id.zelory.compressor.Compressor;
 
 public class NSR {
-    public static final int REQUEST_IMAGE_CAPTURE = 0x1256;
-    public static final String FILENAME_IMAGE_CAPTURE = "nsr-photo.jpg";
-    public static final int PERMISSIONS_MULTIPLE_REQUEST = 123;
-    public static final int PERMISSIONS_MULTIPLE_IMAGECAPTURE = 0x1616;
-    //public static final int UPDATE_INTERVAL_IN_MILLISECONDS = 10000;
-    //public static final int FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = UPDATE_INTERVAL_IN_MILLISECONDS / 2;
-    public static final int REQUEST_CHECK_SETTINGS = 0x1;
-
     public static final String TAG = "nsr";
     private static final String PREFS_NAME = "NSRSDK";
     private static NSR instance = null;
+
     private JSONObject settings = null;
     private JSONObject demoSettings = null;
     private JSONObject authSettings = null;
@@ -77,6 +44,8 @@ public class NSR {
     public static NSR getInstance(Context ctx) {
         if(instance == null) {
             instance = new NSR(ctx);
+        }else{
+            instance.ctx = ctx;
         }
         return instance;
     }
@@ -365,70 +334,11 @@ public class NSR {
         ctx.startActivity(intent);
     }
 
-    public void takePicture(Activity activity, int requestCode){
-        if(requestCode == NSR.PERMISSIONS_MULTIPLE_IMAGECAPTURE){
-            takePicture(activity);
-        }
+    public void takePicture(){
+        NSRBase64Image.getInstance(ctx).takePhoto();
     }
-
-    public void takePicture(final Activity activity){
-        try{
-            Intent mIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            if (mIntent.resolveActivity(ctx.getPackageManager()) != null) {
-                mIntent.putExtra(MediaStore.EXTRA_OUTPUT, FileProvider.getUriForFile(ctx, ctx.getPackageName()+".provider", getFileTemp()));
-                activity.startActivityForResult(mIntent, REQUEST_IMAGE_CAPTURE);
-            }
-        }catch(Exception e){
-            Log.d(NSR.TAG, e.toString());
-        }
-    }
-
-    public File getFileTemp(){
-        final File path = new File(Environment.getExternalStorageDirectory(), ctx.getPackageName());
-        if(!path.exists()){
-            path.mkdir();
-        }
-        return new File(path, FILENAME_IMAGE_CAPTURE);
-    }
-
-    public void pictureProcessed(Activity activity, NSRUtils.NSRPictureProcessed pictureProcessed, int requestCode, int resultCode) {
-        if(requestCode == NSR.REQUEST_IMAGE_CAPTURE && resultCode == Activity.RESULT_OK){
-            pictureProcessed(activity, pictureProcessed);
-        }
-    }
-
-    public void pictureProcessed(final Activity activity, final NSRUtils.NSRPictureProcessed pictureProcessed){
-        pictureProcessed.onStart();
-        new Thread(new Runnable() {
-            public void run() {
-                try {
-                    final String imageProcessed = ctx.getCacheDir().getAbsolutePath()+"/"+FILENAME_IMAGE_CAPTURE;
-                    new Compressor(ctx)
-                            .setMaxWidth(512)
-                            .setMaxHeight(512)
-                            .setQuality(60)
-                            .setCompressFormat(Bitmap.CompressFormat.JPEG)
-                            .setDestinationDirectoryPath(ctx.getCacheDir().getAbsolutePath())
-                            .compressToFile(getFileTemp());
-
-                    BitmapFactory.Options options = new BitmapFactory.Options();
-                    options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-                    Bitmap bitmap = BitmapFactory.decodeFile(imageProcessed, options);;
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-                    String encodedImage = Base64.encodeToString(baos.toByteArray(), Base64.NO_WRAP);
-
-                    final String imageBase64 = "data:image/jpeg;base64,"+encodedImage;
-                    activity.runOnUiThread(new Runnable() {
-                        public void run() {
-                            pictureProcessed.onSuccess(imageBase64);
-                        }
-                    });
-
-                } catch (Exception e) {
-                }
-            }
-        }).start();
+    public void registerCallback(NSRCallbackManager callbackManager, NSRBase64Image.Callback callback) {
+        NSRBase64Image.getInstance(ctx).registerCallback(callbackManager, callback);
     }
 
     public void resetAll() throws Exception {
