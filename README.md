@@ -108,7 +108,7 @@ Step 2. Add the dependency
 	JSONObject payload = new JSONObject();
 	payload.put("latitude", latitude);
 	payload.put("longitude", longitude);
-	NSR.getInstance(this).sendCustomEvent(this, "position", payload);
+	NSR.getInstance(this).sendCustomEvent("position", payload);
 ```
 
 ## Author
