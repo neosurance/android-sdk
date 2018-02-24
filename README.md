@@ -81,7 +81,7 @@ Step 2. Add the dependency
 	configuration.put("base_url", "https://sandbox.neosurancecloud.net/sdk/api/v1.0/");
 	configuration.put("code", "xxxx");
 	configuration.put("secret_key", "xxxx");
-	NSR.getInstance().setup(configuration, this);
+	NSR.getInstance(this).setup(configuration);
 ```
 2. setUser
 
@@ -91,24 +91,24 @@ Step 2. Add the dependency
 	user.setCode("jhon.doe@acme.com");
 	user.setFirstName("Jhon");
 	user.setLastName("Doe");
-	NSR.getInstance().registerUser(user);
+	NSR.getInstance(this).registerUser(user);
 ```
 
 3. showApp
 
 ```java
-	NSR.getInstance().showApp(Context ctx);
+	NSR.getInstance(this).showApp();
 ```
 
 5. customEvent
 
 ```java          
-	NSR.getInstance().sendCustomEvent(Context context, String name, JSONObject payload);
+	NSR.getInstance(this).sendCustomEvent(String name, JSONObject payload);
 	//position example
 	JSONObject payload = new JSONObject();
 	payload.put("latitude", latitude);
 	payload.put("longitude", longitude);
-	NSR.getInstance().sendCustomEvent(this, "position", payload);
+	NSR.getInstance(this).sendCustomEvent("position", payload);
 ```
 
 ## Author
