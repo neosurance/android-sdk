@@ -58,6 +58,7 @@ public class NSRActivityWebView extends AppActivity {
             NSR.getInstance(this).registerCallback(callbackManager, new NSRBase64Image.Callback() {
                 public void onSuccess(String base64Image) {
                     webView.evaluateJavascript(resultCallback+"('"+base64Image+"')",null);
+                    resultCallback = null;
                     findViewById(R.id.progressBar).setVisibility(View.GONE);
                 }
                 public void onCancel() {
