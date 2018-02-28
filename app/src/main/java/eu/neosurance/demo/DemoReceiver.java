@@ -63,7 +63,7 @@ public class DemoReceiver {
                     }
                 }else if ("code".equals(body.getString("what"))) {
                     if(body.has("callBack")) {
-                        final String code = NSR.getInstance(activity).getDemoSettings().getString("code");
+                        final String code = NSR.getInstance(activity).getUser().getCode();
                         eval(body.getString("callBack")+"('"+code+"')");
                     }
                 }else if("showapp".equals(body.getString("what"))){
