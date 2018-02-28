@@ -274,7 +274,7 @@ public class NSR {
                                     user.setLastname(getDemoSettings().getString("lastname"));
                                     registerUser(user);
                                 } catch (Exception e) {
-                                    Log.e("nsr", e.getMessage(), e);
+                                    Log.d(NSR.TAG, e.getMessage());
                                 }
                             }
                             public void onFailure(int statusCode, Header[] headers, byte[] errorResponse, Throwable e) {
@@ -286,7 +286,7 @@ public class NSR {
                 mainHandler.post(myRunnable);
             }
         }catch(Exception e){
-            Log.e("nsr", e.getMessage(), e);
+            Log.d(NSR.TAG, e.getMessage());
         }
     }
 
