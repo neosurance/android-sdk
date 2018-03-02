@@ -297,7 +297,6 @@ public class NSR {
                 public void authorized(boolean authorized) throws Exception {
                     try{
                         ctx.startService(new Intent(ctx, NSRService.class));// run now
-
                         JSONObject conf = getAuthSettings().getJSONObject("conf");
                         final PendingIntent pIntent = PendingIntent.getBroadcast(ctx, NSRSync.REQUEST_CODE, new Intent(ctx, NSRSync.class), PendingIntent.FLAG_UPDATE_CURRENT);
                         AlarmManager alarm = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);

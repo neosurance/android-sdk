@@ -76,9 +76,13 @@ public class NSRRequest {
                                                     String imageUrl = notification.has("imageUrl") && !"".equals(notification.getString("imageUrl")) ? notification.getString("imageUrl") : "";
                                                     String url = notification.has("url") && !"".equals(notification.getString("url")) ? notification.getString("url") : "";
                                                     if (!"".equals(url) && !"".equals(imageUrl) || !"".equals(url)) {
+                                                        Intent backIntent = ctx.getPackageManager().getLaunchIntentForPackage(ctx.getPackageName());
+                                                        backIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
                                                         Intent intent = new Intent(ctx, NSRActivityWebView.class);
                                                         intent.putExtra("json", notification.toString());
-                                                        PendingIntent pendingIntent = PendingIntent.getActivity(ctx, (int) System.currentTimeMillis(), intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                                                        PendingIntent pendingIntent = PendingIntent.getActivities(ctx, (int) System.currentTimeMillis(), new Intent[]{backIntent, intent}, PendingIntent.FLAG_UPDATE_CURRENT);
+                                                        //PendingIntent pendingIntent = PendingIntent.getActivity(ctx, (int) System.currentTimeMillis(), intent, PendingIntent.FLAG_UPDATE_CURRENT);
                                                         if (!"".equals(imageUrl)) {
                                                             NSRNotification.sendNotification(ctx, title, body, imageUrl, pendingIntent);
                                                         } else {
