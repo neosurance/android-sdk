@@ -96,15 +96,11 @@ Step 2. Add the dependency
 ```
 
 
-2. Callback Manager
+2. Request Permissions
 
 ```java	
 	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
 		callbackManager.onRequestPermissionsResult(requestCode, permissions, grantResults);
-	}
-
-	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		callbackManager.onActivityResult(requestCode, resultCode, data);
 	}
 ```
 
@@ -134,6 +130,25 @@ Step 2. Add the dependency
 	payload.put("latitude", latitude);
 	payload.put("longitude", longitude);
 	NSR.getInstance(this).sendCustomEvent("position", payload);
+```
+
+6. Base64Image
+
+```java     
+	NSR.getInstance(this).takePicture();
+	
+	NSR.getInstance(this).registerCallback(callbackManager, new NSRBase64Image.Callback() {
+		public void onSuccess(String base64Image) {
+		}
+		public void onCancel() {
+		}
+		public void onError() {
+		}
+	});
+	
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        	callbackManager.onActivityResult(requestCode, resultCode, data);
+    	}
 ```
 
 ## Author
