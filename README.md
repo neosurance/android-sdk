@@ -92,6 +92,16 @@ Step 2. Add the dependency
 	configuration.put("code", "xxxx");
 	configuration.put("secret_key", "xxxx");
 	NSR.getInstance(this).setup(configuration);
+	
+	callbackManager = NSRCallbackManager.Factory.create();
+	
+	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+		callbackManager.onRequestPermissionsResult(requestCode, permissions, grantResults);
+	}
+
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		callbackManager.onActivityResult(requestCode, resultCode, data);
+	}
 ```
 2. setUser
 
