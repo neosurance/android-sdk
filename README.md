@@ -24,6 +24,7 @@ To run the example project, clone the repo, and build it.
 	<uses-permission android:name="android.permission.WRITE_SETTINGS" />
 	<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 	<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+	<uses-permission android:name="android.permission.CAMERA" />
 	<uses-permission android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION"/>
 
 
@@ -38,13 +39,22 @@ To run the example project, clone the repo, and build it.
 	</activity>
 	<service
 		android:name="eu.neosurance.sdk.NSRActivityRecognitionService"
-		android:exported="false">
-	</service>
-	<service
-		android:name="eu.neosurance.sdk.NSRJobService"
-		android:permission="android.permission.BIND_JOB_SERVICE"
-		android:exported="false">
-	</service>
+		android:exported="false"/>
+        <service 
+		android:name="eu.neosurance.sdk.NSRService"
+		android:exported="false"/>
+        <receiver
+		android:name="eu.neosurance.sdk.NSRSync"
+		android:process=":remote" />
+	<provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="eu.neosurance.demo.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths"/>
+        </provider>
 ```
 
 
