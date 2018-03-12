@@ -57,9 +57,12 @@ public class DemoReceiver {
                         activity.takePhotoRequestPermissions();
                     }
                 }else if ("location".equals(body.getString("what"))) {
-                    JSONObject location = NSR.getInstance(activity).getCurrentLocation();
-                    if(body.has("callBack") && location.has("latitude") && location.has("longitude")){
-                        eval(body.getString("callBack")+"("+location.toString()+")");
+                    if(body.has("callBack")) {
+                        NSR.getInstance(activity).location(new NSR.NSRLocation() {
+                            public void currentLocation(JSONObject location) throws Exception {
+                                eval(body.getString("callBack")+"("+location.toString()+")");
+                            }
+                        });
                     }
                 }else if ("code".equals(body.getString("what"))) {
                     if(body.has("callBack")) {

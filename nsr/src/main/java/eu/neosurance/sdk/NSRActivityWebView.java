@@ -109,9 +109,12 @@ public class NSRActivityWebView extends AppCompatActivity {
                         NSR.getInstance(NSRActivityWebView.this).takePicture();
                     }
                 }else if ("location".equals(body.getString("what"))) {
-                    JSONObject location = NSR.getInstance(NSRActivityWebView.this).getCurrentLocation();
-                    if(body.has("callBack") && location.has("latitude") && location.has("longitude")){
-                        eval(body.getString("callBack")+"("+location.toString()+")");
+                    if(body.has("callBack")) {
+                        NSR.getInstance(NSRActivityWebView.this).location(new NSR.NSRLocation() {
+                            public void currentLocation(JSONObject location) throws Exception {
+                                eval(body.getString("callBack")+"("+location.toString()+")");
+                            }
+                        });
                     }
                 }else if ("code".equals(body.getString("what"))) {
                     if(body.has("callBack")) {
@@ -144,7 +147,7 @@ public class NSRActivityWebView extends AppCompatActivity {
                         if("true".equals(value)){
                             idle();
                         }else{
-                            //finish();
+                            finish();
                         }
                     }
                 });

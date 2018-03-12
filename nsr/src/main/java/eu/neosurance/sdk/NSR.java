@@ -1,6 +1,7 @@
 package eu.neosurance.sdk;
 
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.Application;
@@ -8,9 +9,14 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
+
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.gson.Gson;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
@@ -18,7 +24,9 @@ import com.loopj.android.http.AsyncHttpResponseHandler;
 import org.json.JSONObject;
 
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 
 import cz.msebera.android.httpclient.Header;
@@ -26,6 +34,8 @@ import cz.msebera.android.httpclient.Header;
 public class NSR {
     public static final String TAG = "nsr";
     private static final String PREFS_NAME = "NSRSDK";
+    public static final int PERMISSIONS_MULTIPLE_ACCESSLOCATION = 0x2043;
+    public static final int PERMISSIONS_MULTIPLE_IMAGECAPTURE = 0x2049;
     private static NSR instance = null;
 
     private JSONObject settings = null;
@@ -36,6 +46,7 @@ public class NSR {
     private JSONObject currentLocation = null;
     private JSONObject lastLocation = null;
     private boolean stillPositionSent = false;
+    private FusedLocationProviderClient fusedLocationClient;
 
     private NSR(Context ctx) {
         this.ctx = ctx;
@@ -182,6 +193,35 @@ public class NSR {
         }
     }
 
+    public void location(final NSRLocation location) throws Exception{
+        if (ActivityCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+            ActivityCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            location.currentLocation(getCurrentLocation());
+        }else {
+            NSRCallbackManagerImpl.registerStaticCallback(NSR.PERMISSIONS_MULTIPLE_ACCESSLOCATION, new NSRCallbackManagerImpl.PermissionCallback() {
+                public boolean onRequestPermissionsResult(String[] permissions, int[] grantResults) {
+                    startService();
+                    new Handler().postDelayed(new Runnable() {
+                        public void run() {
+                            try {
+                                location(location);
+                            } catch (Exception e) {
+                                Log.d(NSR.TAG, e.toString());
+                            }
+                        }
+                    }, 1000);
+                    return true;
+                }
+            });
+            List<String> permissionsList = new ArrayList<String>();
+            NSRUtils.addPermission(ctx, permissionsList, Manifest.permission.ACCESS_FINE_LOCATION);
+            NSRUtils.addPermission(ctx, permissionsList, Manifest.permission.ACCESS_COARSE_LOCATION);
+            if (permissionsList.size() > 0) {
+                ActivityCompat.requestPermissions((Activity) ctx, permissionsList.toArray(new String[permissionsList.size()]), NSR.PERMISSIONS_MULTIPLE_ACCESSLOCATION);
+            }
+        }
+    }
+
     public void authorize(final NSRAuth delegate) throws Exception {
         int remainingSeconds = NSRUtils.tokenRemainingSeconds(getAuthSettings());
         if(remainingSeconds > 0) {
@@ -204,7 +244,6 @@ public class NSR {
                 Handler mainHandler = new Handler(Looper.getMainLooper());
                 Runnable myRunnable = new Runnable() {
                     public void run(){
-
                         client.get(url, new AsyncHttpResponseHandler() {
                             public void onSuccess(int statusCode, Header[] headers, byte[] response) {
                                 try {
@@ -228,8 +267,28 @@ public class NSR {
         }
     }
 
-    public void setup(JSONObject settings){
+    public void setup(final JSONObject settings){
         try{
+            if("0".equals(getData("permission_required", "0")) && settings.has("ask_permission") && settings.getInt("ask_permission") == 1){
+                setData("permission_required", "1");
+                if (ActivityCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
+                    ActivityCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    NSRCallbackManagerImpl.registerStaticCallback(NSR.PERMISSIONS_MULTIPLE_ACCESSLOCATION, new NSRCallbackManagerImpl.PermissionCallback() {
+                        public boolean onRequestPermissionsResult(String[] permissions, int[] grantResults) {
+                            setup(settings);
+                            return true;
+                        }
+                    });
+                    List<String> permissionsList = new ArrayList<String>();
+                    NSRUtils.addPermission(ctx, permissionsList, Manifest.permission.ACCESS_FINE_LOCATION);
+                    NSRUtils.addPermission(ctx, permissionsList, Manifest.permission.ACCESS_COARSE_LOCATION);
+                    if (permissionsList.size() > 0) {
+                        ActivityCompat.requestPermissions((Activity) ctx, permissionsList.toArray(new String[permissionsList.size()]), NSR.PERMISSIONS_MULTIPLE_ACCESSLOCATION);
+                    }
+                    return;
+                }
+            }
+
             if(!settings.has("ns_lang")) {
                 settings.put("ns_lang", Locale.getDefault().getDisplayLanguage());
             }
@@ -295,20 +354,37 @@ public class NSR {
             setUser(user);
             authorize(new NSRAuth() {
                 public void authorized(boolean authorized) throws Exception {
-                    try{
-                        ctx.startService(new Intent(ctx, NSRService.class));// run now
-                        JSONObject conf = getAuthSettings().getJSONObject("conf");
-                        final PendingIntent pIntent = PendingIntent.getBroadcast(ctx, NSRSync.REQUEST_CODE, new Intent(ctx, NSRSync.class), PendingIntent.FLAG_UPDATE_CURRENT);
-                        AlarmManager alarm = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
-                        alarm.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(),conf.getInt("time")*1000, pIntent);
-                    }catch(Exception e){
-                        Log.e("nsr", e.getMessage(), e);
-                    }
+                    startService();
                 }
             });
         }catch(Exception e){
             Log.d("nsr", e.getMessage(), e);
         }
+    }
+
+    private void startService() {
+        try {
+            if (ActivityCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                ActivityCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+
+                ctx.startService(new Intent(ctx, NSRService.class));// run now
+                JSONObject conf = getAuthSettings().getJSONObject("conf");
+                AlarmManager alarm = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
+                Intent intent = new Intent(ctx, NSRSync.class);
+                PendingIntent pIntent = PendingIntent.getBroadcast(ctx, NSRSync.REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                alarm.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(),conf.getInt("time")*1000, pIntent);
+            }
+
+        }catch (Exception e){
+            Log.d(NSR.TAG, e.getMessage(), e);
+        }
+    }
+
+    private void stopService(){
+        AlarmManager alarm = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(ctx, NSRSync.class);
+        PendingIntent pIntent = PendingIntent.getBroadcast(ctx, NSRSync.REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        alarm.cancel(pIntent);
     }
 
     public void showApp() throws Exception {
@@ -334,8 +410,25 @@ public class NSR {
     }
 
     public void takePicture(){
-        NSRBase64Image.getInstance(ctx).takePhoto();
+        if (ActivityCompat.checkSelfPermission(ctx, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED ||
+            ActivityCompat.checkSelfPermission(ctx, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            NSRCallbackManagerImpl.registerStaticCallback(NSR.PERMISSIONS_MULTIPLE_IMAGECAPTURE, new NSRCallbackManagerImpl.PermissionCallback() {
+                public boolean onRequestPermissionsResult(String[] permissions, int[] grantResults) {
+                    NSRBase64Image.getInstance(ctx).takePhoto();
+                    return true;
+                }
+            });
+            List<String> permissionsList = new ArrayList<String>();
+            NSRUtils.addPermission(ctx, permissionsList, Manifest.permission.CAMERA);
+            NSRUtils.addPermission(ctx, permissionsList, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            if (permissionsList.size() > 0) {
+                ActivityCompat.requestPermissions((Activity) ctx, permissionsList.toArray(new String[permissionsList.size()]), NSR.PERMISSIONS_MULTIPLE_IMAGECAPTURE);
+            }
+        }else{
+            NSRBase64Image.getInstance(ctx).takePhoto();
+        }
     }
+
     public void registerCallback(NSRCallbackManager callbackManager, NSRBase64Image.Callback callback) {
         NSRBase64Image.getInstance(ctx).registerCallback(callbackManager, callback);
     }
@@ -343,6 +436,13 @@ public class NSR {
     public void resetAll() throws Exception {
         setAuthSettings(null);
     }
+
+    public void clearUser() throws Exception {
+        resetAll();
+        setUser(null);
+        stopService();
+    }
+
 
     public void  sendCustomEvent(String name, JSONObject payload) throws Exception {
         NSRRequest request = new NSRRequest(NSRUtils.makeEvent(name, payload));
@@ -366,4 +466,9 @@ public class NSR {
         }
         editor.commit();
     }
+
+    public interface NSRLocation {
+        public void currentLocation(JSONObject location) throws Exception;
+    }
+
 }

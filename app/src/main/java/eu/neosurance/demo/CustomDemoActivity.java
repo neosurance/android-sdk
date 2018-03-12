@@ -18,6 +18,7 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationSet;
 import android.view.animation.RotateAnimation;
 import android.view.animation.ScaleAnimation;
+import android.webkit.WebViewClient;
 
 import com.clickntap.tap.AppActivity;
 import com.clickntap.tap.web.TapWebView;
@@ -37,18 +38,6 @@ import java.util.Locale;
 import eu.neosurance.sdk.NSR;
 import eu.neosurance.sdk.NSRUtils;
 public class CustomDemoActivity extends AppActivity  implements View.OnTouchListener {
-
-    // private static final int REQUEST_IMAGE_CAPTURE = 0x1256;
-    // private static final String FILENAME_IMAGE_CAPTURE = "nsr-photo.jpg";
-    // private static final int PERMISSIONS_MULTIPLE_REQUEST = 123;
-    // private static final int PERMISSIONS_MULTIPLE_IMAGECAPTURE = 0x1616;
-    // private static final int UPDATE_INTERVAL_IN_MILLISECONDS = 10000;
-    // private static final int FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = UPDATE_INTERVAL_IN_MILLISECONDS / 2;
-    // private static final int REQUEST_CHECK_SETTINGS = 0x1;
-
-    protected static final int PERMISSIONS_MULTIPLE_ACCESSLOCATION = 0x2043;
-    protected static final int PERMISSIONS_MULTIPLE_IMAGECAPTURE = 0x2049;
-
     protected boolean menuOpened;
     protected boolean uiOpened;
     protected boolean uiMapOpened;
@@ -85,10 +74,11 @@ public class CustomDemoActivity extends AppActivity  implements View.OnTouchList
 
     protected void loadUi(){
         demoWebView = (TapWebView) findViewById(R.id.demoWebView);
-        demoWebView.addJavascriptInterface(new DemoReceiver((DemoActivity) this, demoWebView), "NSSdk");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             demoWebView.setWebContentsDebuggingEnabled(true);
         }
+        demoWebView.loadUrl("file:///android_asset/appui.html");
+        demoWebView.addJavascriptInterface(new DemoReceiver((DemoActivity) this, demoWebView), "NSSdk");
         findViewById(R.id.menuButtonFrame).setOnTouchListener(this);
         findViewById(R.id.menuButtonFrame).setVisibility(View.GONE);
         setFrame(R.id.menuButtonFrame, 160, 160, 80, 80);
@@ -198,19 +188,10 @@ public class CustomDemoActivity extends AppActivity  implements View.OnTouchList
         }
     }
 
+
     private void showDemoUi(final int n) {
         uiOpened = true;
-        demoWebView.evaluateJavascript("setPage(0);", null);
-        demoWebView.setOnloadCode("setContentData(" + NSR.getInstance(this).getDemoSettings().toString() + ");setPage(" + n + ");");
-        demoWebView.setDelegate(new TapWebViewDelegate() {
-            public void onLoad() {
-                final AppActivity activity = CustomDemoActivity.this;
-                final View spinner = activity.findViewById(R.id.progressBar);
-                spinner.setVisibility(View.GONE);
-            }
-        });
-        demoWebView.loadUrl("file:///android_asset/appui.html");
-        demoWebView.setVisibility(View.VISIBLE);
+        demoWebView.evaluateJavascript("setContentData("+NSR.getInstance(this).getDemoSettings().toString()+");setPage("+n+");", null);
         playBtnSound();
         Animation fade = new AlphaAnimation(0.00f, 1.00f);
         fade.setDuration(500);

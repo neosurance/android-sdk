@@ -1,12 +1,15 @@
 package eu.neosurance.sdk;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.FileProvider;
 import android.util.Base64;
 import android.util.Log;
@@ -44,10 +47,13 @@ public class NSRBase64Image {
     }
 
     public void takePhoto(){
-        Intent mIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (mIntent.resolveActivity(activity.getPackageManager()) != null) {
-            mIntent.putExtra(MediaStore.EXTRA_OUTPUT, FileProvider.getUriForFile(activity, activity.getPackageName()+".provider", getFileTemp()));
-            activity.startActivityForResult(mIntent, REQUEST_IMAGE_CAPTURE);
+        if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED ||
+            ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+            Intent mIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            if (mIntent.resolveActivity(activity.getPackageManager()) != null) {
+                mIntent.putExtra(MediaStore.EXTRA_OUTPUT, FileProvider.getUriForFile(activity, activity.getPackageName()+".provider", getFileTemp()));
+                activity.startActivityForResult(mIntent, REQUEST_IMAGE_CAPTURE);
+            }
         }
     }
 
