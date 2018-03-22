@@ -46,12 +46,13 @@
 
         <service
             android:name="eu.neosurance.sdk.NSRActivityRecognitionService"
-            android:exported="false"></service>
-        <service android:name="eu.neosurance.sdk.NSRService"
+            android:exported="false"/>
+        <service
+            android:name="eu.neosurance.sdk.NSRService"
             android:exported="false"/>
         <receiver
             android:name="eu.neosurance.sdk.NSRSync"
-            android:process=":remote" ></receiver>
+            android:process=":remote" />
 
         <provider
             android:name="android.support.v4.content.FileProvider"

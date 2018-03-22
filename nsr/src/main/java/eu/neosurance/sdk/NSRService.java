@@ -16,6 +16,7 @@ import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -87,7 +88,8 @@ public class NSRService extends IntentService {
             try{
                 this.context = context;
                 this.conf = NSR.getInstance(context).getAuthSettings().getJSONObject("conf");
-                context.getApplicationContext().registerReceiver(activitiesReceiver, new IntentFilter(NSRActivityRecognitionService.ACTION));
+                LocalBroadcastManager.getInstance(context).registerReceiver(activitiesReceiver, new IntentFilter(NSRActivityRecognitionService.ACTION));
+                //context.getApplicationContext().registerReceiver(activitiesReceiver, new IntentFilter(NSRActivityRecognitionService.ACTION));
                 if (GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS) {
                     activitiesClient = ActivityRecognition.getClient(context);
                     Intent intent = new Intent(context, NSRActivityRecognitionService.class);
@@ -212,7 +214,14 @@ public class NSRService extends IntentService {
             if(activitiesClient != null){
                 activitiesClient.removeActivityUpdates(pendingIntentActivities);
             }
-            context.getApplicationContext().unregisterReceiver(activitiesReceiver);
+            try{
+                if(activitiesReceiver != null){
+                    LocalBroadcastManager.getInstance(context).unregisterReceiver(activitiesReceiver);
+                }
+            }catch(Exception e){
+                Log.d(NSR.TAG, e.toString());
+            }
+            //context.getApplicationContext().unregisterReceiver(activitiesReceiver);
         }
     }
 
