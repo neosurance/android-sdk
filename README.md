@@ -154,6 +154,12 @@ Step 2. Add the dependency
         	callbackManager.onActivityResult(requestCode, resultCode, data);
     	}
 ```
+7. SecurityDelegate
+
+```java     
+	NSR.getInstance(this).setSecurityDelegate(... your security delegate);
+```
+
 
 ## Author
 
