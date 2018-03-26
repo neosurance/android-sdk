@@ -2,7 +2,6 @@ package eu.neosurance.sdk;
 
 
 import android.app.Activity;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -47,15 +46,15 @@ public class NSRActivityWebView extends AppCompatActivity {
                 webView.setWebContentsDebuggingEnabled(true);
             }
             webView.loadUrl(json.getString("url"));
-            webView.setWebViewClient(new WebViewClient() {
+            webView.setWebViewClient(new WebViewClient(){
                 public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                    if (url.endsWith(".pdf")) {
+                    if(url.endsWith(".pdf")){
                         Intent intent = new Intent(Intent.ACTION_VIEW);
                         intent.setDataAndType(Uri.parse(url), "application/pdf");
                         intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
                         startActivity(intent);
                         return true;
-                    } else {
+                    }else{
                         return false;
                     }
                 }
@@ -64,14 +63,12 @@ public class NSRActivityWebView extends AppCompatActivity {
             callbackManager = NSRCallbackManager.Factory.create();
             NSR.getInstance(this).registerCallback(callbackManager, new NSRBase64Image.Callback() {
                 public void onSuccess(String base64Image) {
-                    webView.evaluateJavascript(NSR.getInstance(NSRActivityWebView.this).getVariable("resultCallback") + "('" + base64Image + "')", null);
+                    webView.evaluateJavascript(NSR.getInstance(NSRActivityWebView.this).getVariable("resultCallback")+"('"+base64Image+"')",null);
                     findViewById(R.id.progressBar).setVisibility(View.GONE);
                 }
-
                 public void onCancel() {
                     findViewById(R.id.progressBar).setVisibility(View.GONE);
                 }
-
                 public void onError() {
                 }
             });
@@ -82,6 +79,7 @@ public class NSRActivityWebView extends AppCompatActivity {
         }
 
     }
+
 
     @JavascriptInterface
     public void postMessage(String json) {
@@ -146,12 +144,12 @@ public class NSRActivityWebView extends AppCompatActivity {
                     if (body.has("callBack")) {
                         final String code = NSR.getInstance(context).getDemoSettings().getString("code");
                         eval(aWebView, body.getString("callBack") + "('" + code + "')");
-                     }
+                    }
                 }
                 if ("user".equals(body.getString("what"))) {
                     if (body.has("callBack")) {
                         eval(aWebView, body.getString("callBack") + "(" + NSR.getInstance(context).getUser().toJsonObject().toString() + ")");
-                     }
+                    }
                 }
                 if ("action".equals(body.getString("what"))) {
                     NSR.getInstance(context).sendAction(body.getString("action"), body.getString("code"), body.getString("details"));
@@ -165,42 +163,30 @@ public class NSRActivityWebView extends AppCompatActivity {
                 }
             }
         } catch (Exception e) {
+            e.printStackTrace();
             Log.e(NSR.TAG, e.getMessage());
         }
     }
+
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         callbackManager.onActivityResult(requestCode, resultCode, data);
     }
 
-    private void idle() {
+    private void idle(){
         new Handler().postDelayed(new Runnable() {
             public void run() {
                 webView.evaluateJavascript("(function() { return (window.document.body.className.indexOf('NSR') == -1 ? false : true); })();", new ValueCallback<String>() {
                     public void onReceiveValue(String value) {
-                        if ("true".equals(value)) {
+                        if("true".equals(value)){
                             idle();
-                        } else {
+                        }else{
                             finish();
                         }
                     }
                 });
             }
-        }, 15 * 1000);
-    }
-
-    private void eval(final String code){
-        Handler mainHandler = new Handler(Looper.getMainLooper());
-        Runnable myRunnable = new Runnable() {
-            public void run() {
-                try{
-                    webView.evaluateJavascript(code,null);
-                }catch(Exception e){
-                    Log.d(NSR.TAG, e.getMessage(), e);
-                }
-            }
-        };
-        mainHandler.post(myRunnable);
+        },15*1000);
     }
 
 }

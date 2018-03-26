@@ -6,19 +6,19 @@ import org.json.JSONObject;
 import java.util.Date;
 
 public class NSRUser {
-    private String code;
-    private String email;
-    private String firstname;
-    private String lastname;
-    private String mobile;
-    private String fiscalCode;
-    private String gender;
+    private String  code;
+    private String  email;
+    private String  firstname;
+    private String  lastname;
+    private String  mobile;
+    private String  fiscalCode;
+    private String  gender;
     private Date birthday;
-    private String address;
-    private String zipCode;
-    private String city;
-    private String stateProvince;
-    private String country;
+    private String  address;
+    private String  zipCode;
+    private String  city;
+    private String  stateProvince;
+    private String  country;
     private JSONObject extra;
 
     public String getCode() {

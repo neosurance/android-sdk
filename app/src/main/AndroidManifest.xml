@@ -50,6 +50,10 @@
         <service
             android:name="eu.neosurance.sdk.NSRService"
             android:exported="false"/>
+        <service
+            android:name="eu.neosurance.sdk.NSRJobService"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE"/>
         <receiver
             android:name="eu.neosurance.sdk.NSRSync"
             android:process=":remote" />

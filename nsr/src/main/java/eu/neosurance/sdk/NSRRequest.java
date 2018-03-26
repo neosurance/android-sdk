@@ -5,20 +5,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Build;
-import android.os.Handler;
-import android.os.Looper;
 import android.provider.Settings;
 import android.util.Log;
-
-import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.AsyncHttpResponseHandler;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.net.URLEncoder;
-
-import cz.msebera.android.httpclient.Header;
 
 public class NSRRequest {
 
@@ -47,7 +38,6 @@ public class NSRRequest {
                 headers.put("ns_lang", NSR.getInstance(ctx).getSettings().getString("ns_lang"));
 
                 NSR.getInstance(ctx).getSecurityDelegate().secureRequest(ctx, "event", payload, headers, new NSRSecurityResponse() {
-
                     public void completionHandler(JSONObject json, String error) throws Exception {
                         try {
                             if ("ok".equals(json.getString("status"))) {
