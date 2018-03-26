@@ -142,7 +142,7 @@ public class NSRServiceTask extends AsyncTask<String, Void, String> {
                                         Log.d(NSR.TAG, "distanceInMeters: "+distanceInMeters);
                                     }
 
-                                    if(distanceInMeters > conf.getJSONObject("position").getInt("meters") || !(lastLocation.has("latitude") && lastLocation.has("longitude")) ){
+                                    if(distanceInMeters > conf.getJSONObject("position").getDouble("meters") || !(lastLocation.has("latitude") && lastLocation.has("longitude")) ){
                                         Log.d(NSR.TAG, "------ location sent: "+locationAsJson.getDouble("latitude")+","+locationAsJson.getDouble("longitude"));
                                         JSONObject payload = new JSONObject(locationAsJson.toString());
                                         NSR.getInstance(context).sendCustomEvent("position", payload);
