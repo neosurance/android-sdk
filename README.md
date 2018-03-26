@@ -38,17 +38,21 @@ To run the example project, clone the repo, and build it.
 		android:screenOrientation="portrait">
 	</activity>
 	<service
-		android:name="eu.neosurance.sdk.NSRActivityRecognitionService"
-		android:exported="false"/>
-        <service 
-		android:name="eu.neosurance.sdk.NSRService"
-		android:exported="false"/>
+            android:name="eu.neosurance.sdk.NSRActivityRecognitionService"
+            android:exported="false"/>
+        <service
+            android:name="eu.neosurance.sdk.NSRService"
+            android:exported="false"/>
+        <service
+            android:name="eu.neosurance.sdk.NSRJobService"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE"/>
         <receiver
-		android:name="eu.neosurance.sdk.NSRSync"
-		android:process=":remote" />
+            android:name="eu.neosurance.sdk.NSRSync"
+            android:process=":remote" />
 	<provider
             android:name="android.support.v4.content.FileProvider"
-            android:authorities="eu.neosurance.demo.provider"
+            android:authorities="[your.package].provider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
@@ -79,7 +83,7 @@ Step 2. Add the dependency
 
 ```gradle
 	dependencies {
-		compile 'com.github.clickntap:android-neosurance-sdk:1.2.4'
+		compile 'com.github.clickntap:android-neosurance-sdk:1.3.0'
 	}
 ```
 
