@@ -46,12 +46,13 @@
 
         <service
             android:name="eu.neosurance.sdk.NSRActivityRecognitionService"
-            android:exported="false"></service>
-        <service android:name="eu.neosurance.sdk.NSRService"
+            android:exported="false"/>
+        <service
+            android:name="eu.neosurance.sdk.NSRService"
             android:exported="false"/>
         <receiver
             android:name="eu.neosurance.sdk.NSRSync"
-            android:process=":remote" ></receiver>
+            android:process=":remote" />
 
         <provider
             android:name="android.support.v4.content.FileProvider"
@@ -62,10 +63,6 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths"/>
         </provider>
-        <!--service
-            android:name="eu.neosurance.sdk.NSRJobService"
-            android:permission="android.permission.BIND_JOB_SERVICE"
-            android:exported="false"></service-->
     </application>
 
 </manifest>

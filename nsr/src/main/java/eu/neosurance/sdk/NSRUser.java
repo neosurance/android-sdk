@@ -6,19 +6,19 @@ import org.json.JSONObject;
 import java.util.Date;
 
 public class NSRUser {
-    private String  code;
-    private String  email;
-    private String  firstname;
-    private String  lastname;
-    private String  mobile;
-    private String  fiscalCode;
-    private String  gender;
+    private String code;
+    private String email;
+    private String firstname;
+    private String lastname;
+    private String mobile;
+    private String fiscalCode;
+    private String gender;
     private Date birthday;
-    private String  address;
-    private String  zipCode;
-    private String  city;
-    private String  stateProvince;
-    private String  country;
+    private String address;
+    private String zipCode;
+    private String city;
+    private String stateProvince;
+    private String country;
     private JSONObject extra;
 
     public String getCode() {
@@ -131,5 +131,52 @@ public class NSRUser {
 
     public void setExtra(JSONObject extra) {
         this.extra = extra;
+    }
+
+    public JSONObject toJsonObject() throws Exception {
+        JSONObject jsonObject = new JSONObject();
+        if (code != null) {
+            jsonObject.put("code", code);
+        }
+        if (email != null) {
+            jsonObject.put("email", email);
+        }
+        if (firstname != null) {
+            jsonObject.put("firstname", firstname);
+        }
+        if (lastname != null) {
+            jsonObject.put("lastname", lastname);
+        }
+        if (mobile != null) {
+            jsonObject.put("mobile", mobile);
+        }
+        if (fiscalCode != null) {
+            jsonObject.put("fiscalCode", fiscalCode);
+        }
+        if (gender != null) {
+            jsonObject.put("gender", gender);
+        }
+        if (birthday != null) {
+            jsonObject.put("birthday", birthday);
+        }
+        if (address != null) {
+            jsonObject.put("address", address);
+        }
+        if (zipCode != null) {
+            jsonObject.put("zipCode", zipCode);
+        }
+        if (city != null) {
+            jsonObject.put("city", city);
+        }
+        if (stateProvince != null) {
+            jsonObject.put("stateProvince", stateProvince);
+        }
+        if (country != null) {
+            jsonObject.put("country", country);
+        }
+        if (extra != null) {
+            jsonObject.put("extra", extra);
+        }
+        return jsonObject;
     }
 }

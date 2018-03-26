@@ -24,6 +24,7 @@ To run the example project, clone the repo, and build it.
 	<uses-permission android:name="android.permission.WRITE_SETTINGS" />
 	<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 	<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+	<uses-permission android:name="android.permission.CAMERA" />
 	<uses-permission android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION"/>
 
 
@@ -38,13 +39,22 @@ To run the example project, clone the repo, and build it.
 	</activity>
 	<service
 		android:name="eu.neosurance.sdk.NSRActivityRecognitionService"
-		android:exported="false">
-	</service>
-	<service
-		android:name="eu.neosurance.sdk.NSRJobService"
-		android:permission="android.permission.BIND_JOB_SERVICE"
-		android:exported="false">
-	</service>
+		android:exported="false"/>
+        <service 
+		android:name="eu.neosurance.sdk.NSRService"
+		android:exported="false"/>
+        <receiver
+		android:name="eu.neosurance.sdk.NSRSync"
+		android:process=":remote" />
+	<provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="eu.neosurance.demo.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths"/>
+        </provider>
 ```
 
 
@@ -69,7 +79,7 @@ Step 2. Add the dependency
 
 ```gradle
 	dependencies {
-		compile 'com.github.clickntap:android-neosurance-sdk:1.2'
+		compile 'com.github.clickntap:android-neosurance-sdk:1.2.4'
 	}
 ```
 
@@ -82,8 +92,19 @@ Step 2. Add the dependency
 	configuration.put("code", "xxxx");
 	configuration.put("secret_key", "xxxx");
 	NSR.getInstance(this).setup(configuration);
+	NSRCallbackManager callbackManager = NSRCallbackManager.Factory.create();
 ```
-2. setUser
+
+
+2. Request Permissions
+
+```java	
+	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+		callbackManager.onRequestPermissionsResult(requestCode, permissions, grantResults);
+	}
+```
+
+3. setUser
 
 ```java
 	NSRUser user = new NSRUser();
@@ -94,7 +115,7 @@ Step 2. Add the dependency
 	NSR.getInstance(this).registerUser(user);
 ```
 
-3. showApp
+4. showApp
 
 ```java
 	NSR.getInstance(this).showApp();
@@ -109,6 +130,25 @@ Step 2. Add the dependency
 	payload.put("latitude", latitude);
 	payload.put("longitude", longitude);
 	NSR.getInstance(this).sendCustomEvent("position", payload);
+```
+
+6. Base64Image
+
+```java     
+	NSR.getInstance(this).takePicture();
+	
+	NSR.getInstance(this).registerCallback(callbackManager, new NSRBase64Image.Callback() {
+		public void onSuccess(String base64Image) {
+		}
+		public void onCancel() {
+		}
+		public void onError() {
+		}
+	});
+	
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        	callbackManager.onActivityResult(requestCode, resultCode, data);
+    	}
 ```
 
 ## Author
