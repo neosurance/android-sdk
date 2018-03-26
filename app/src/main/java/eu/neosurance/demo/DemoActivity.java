@@ -49,6 +49,7 @@ public class DemoActivity extends CustomDemoActivity{
             callbackManager = NSRCallbackManager.Factory.create();
             NSR.getInstance(this).registerCallback(callbackManager, new NSRBase64Image.Callback() {
                 public void onSuccess(String base64Image) {
+                    Log.d(NSR.TAG, "--- base64Image "+base64Image);
                     NSR.getInstance(DemoActivity.this).setData("base64Image", base64Image);
                     Intent intent = new Intent();
                     intent.setAction(DemoReceiver.ACTION_DEMO_RECEIVER);

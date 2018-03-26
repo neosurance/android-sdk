@@ -51,17 +51,17 @@ public class NSRServiceTask extends AsyncTask<String, Void, String> {
                 if(!payload.getString("type").equals(NSR.getInstance(context).getData("lastActivity",""))) {
                     NSR.getInstance(context).sendCustomEvent("activity", payload);
                     NSR.getInstance(context).setData("lastActivity", payload.getString("type"));
-                }
 
-                if("still".equals(payload.getString("type"))){
-                    if(!NSR.getInstance(context).getStillPositionSent()){
-                        JSONObject payloadPosition = new JSONObject();
-                        payloadPosition.put("still", 1);
-                        payloadPosition.put("latitude", NSR.getInstance(context).getCurrentLocation().getDouble("latitude"));
-                        payloadPosition.put("longitude", NSR.getInstance(context).getCurrentLocation().getDouble("longitude"));
-                        NSR.getInstance(context).sendCustomEvent("position", payloadPosition);
+                    if("still".equals(payload.getString("type"))){
+                        if(!NSR.getInstance(context).getStillPositionSent()){
+                            JSONObject payloadPosition = new JSONObject();
+                            payloadPosition.put("still", 1);
+                            payloadPosition.put("latitude", NSR.getInstance(context).getCurrentLocation().getDouble("latitude"));
+                            payloadPosition.put("longitude", NSR.getInstance(context).getCurrentLocation().getDouble("longitude"));
+                            NSR.getInstance(context).sendCustomEvent("position", payloadPosition);
+                        }
+                        NSR.getInstance(context).setStillPositionSent(true);
                     }
-                    NSR.getInstance(context).setStillPositionSent(true);
                 }
             } catch (Exception e) {
             }
@@ -74,7 +74,6 @@ public class NSRServiceTask extends AsyncTask<String, Void, String> {
         this.jobParameters = jobParameters;
         this.context = jobService.getApplicationContext();
         init();
-        Log.d(NSR.TAG, "NSRServiceTask");
     }
 
     public NSRServiceTask(Context context) {
@@ -86,7 +85,7 @@ public class NSRServiceTask extends AsyncTask<String, Void, String> {
         try{
             this.conf = NSR.getInstance(context).getAuthSettings().getJSONObject("conf");
             LocalBroadcastManager.getInstance(context).registerReceiver(activitiesReceiver, new IntentFilter(NSRActivityRecognitionService.ACTION));
-            activitiesReceiverIsRegister = true;
+            this.activitiesReceiverIsRegister = true;
             //context.getApplicationContext().registerReceiver(activitiesReceiver, new IntentFilter(NSRActivityRecognitionService.ACTION));
             if (GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS) {
                 activitiesClient = ActivityRecognition.getClient(context);
@@ -143,7 +142,7 @@ public class NSRServiceTask extends AsyncTask<String, Void, String> {
                                         Log.d(NSR.TAG, "distanceInMeters: "+distanceInMeters);
                                     }
 
-                                    if(distanceInMeters > 50 || !(lastLocation.has("latitude") && lastLocation.has("longitude")) ){
+                                    if(distanceInMeters > conf.getJSONObject("position").getInt("meters") || !(lastLocation.has("latitude") && lastLocation.has("longitude")) ){
                                         Log.d(NSR.TAG, "------ location sent: "+locationAsJson.getDouble("latitude")+","+locationAsJson.getDouble("longitude"));
                                         JSONObject payload = new JSONObject(locationAsJson.toString());
                                         NSR.getInstance(context).sendCustomEvent("position", payload);
@@ -187,9 +186,22 @@ public class NSRServiceTask extends AsyncTask<String, Void, String> {
                 payload.put("type", (chargePlug > 0 ? "plugged" : "unplugged"));
                 payload.put("level", ""+currentLevel);
 
-                if(!payload.getString("type").equals(NSR.getInstance(context).getData("lastPower",""))) {
+                JSONObject lastPower = new JSONObject(NSR.getInstance(context).getData("lastPower","{}"));
+                String lastType = "";
+                int differenceLevel = 0;
+
+                if(lastPower.has("type") && lastPower.has("level")){
+                    lastType = lastPower.getString("type");
+                    int lastLevel = lastPower.getInt("level");
+                    differenceLevel = lastLevel > currentLevel ? lastLevel - currentLevel : currentLevel - lastLevel;
+                }
+
+                Log.d(NSR.TAG, "lastType "+lastType);
+                Log.d(NSR.TAG, "differenceLevel "+differenceLevel);
+
+                if(!payload.getString("type").equals(lastType) || differenceLevel >= 5) {
                     NSR.getInstance(context).sendCustomEvent("power", payload);
-                    NSR.getInstance(context).setData("lastPower", payload.getString("type"));
+                    NSR.getInstance(context).setData("lastPower", payload.toString());
                 }
             }
         } catch (Exception e) {
@@ -227,11 +239,10 @@ public class NSRServiceTask extends AsyncTask<String, Void, String> {
                 LocalBroadcastManager.getInstance(context).unregisterReceiver(activitiesReceiver);
             }
         }catch(Exception e){
-            Log.d(NSR.TAG, e.toString());
+            //Log.d(NSR.TAG, e.toString());
         }
 
         if(jobService != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
-            Log.d(NSR.TAG, "----- jobFinished");
             jobService.jobFinished(jobParameters, false);
         }
 

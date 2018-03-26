@@ -16,7 +16,6 @@ public class DemoReceiver {
     public static final String ACTION_DEMO_RECEIVER = "NSRDemoReceiver";
     private DemoActivity activity;
     private TapWebView webView;
-    private String resultCallback;
 
     private BroadcastReceiver demoReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
@@ -24,8 +23,7 @@ public class DemoReceiver {
                 String service = intent.getExtras().getString("service");
                 if("base64Image".equals(service)){
                     String base64Image = NSR.getInstance(activity).getData("base64Image", "");
-                    webView.evaluateJavascript(resultCallback+"('"+base64Image+"')",null);
-                    resultCallback = null;
+                    webView.evaluateJavascript(NSR.getInstance(activity).getVariable("resultCallback")+"('"+base64Image+"')",null);
                     NSR.getInstance(activity).setData("base64Image", null);
                 }
 
