@@ -393,7 +393,7 @@ public class NSR {
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     Log.d(NSR.TAG, "Start Job Service...");
-                    NSRJobService.schedule(ctx, conf.getInt("time")*1000);
+                    NSRJobService.schedule(ctx, 1000);
                 }else{
                     Log.d(NSR.TAG, "Start Service...");
                     NSRService.start(ctx);
