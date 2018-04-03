@@ -243,6 +243,10 @@ public class NSRServiceTask extends AsyncTask<String, Void, String> {
         }
 
         if(jobService != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
+            try {
+			    NSRJobService.schedule(context, conf.getInt("time") * 1000);
+            } catch (Exception e) {
+            }
             jobService.jobFinished(jobParameters, false);
         }
 
