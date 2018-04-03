@@ -44,25 +44,27 @@ public class NSRServiceTask extends AsyncTask<String, Void, String> {
     private BroadcastReceiver activitiesReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             try {
-                JSONObject payload = new JSONObject();
-                payload.put("type", intent.getExtras().getString("activity"));
-                payload.put("conficende", intent.getExtras().getInt("conficende"));
+		if(conf.getJSONObject("activity").getInt("conficende") > intent.getExtras().getInt("conficende")){
+			JSONObject payload = new JSONObject();
+			payload.put("type", intent.getExtras().getString("activity"));
+			payload.put("conficende", intent.getExtras().getInt("conficende"));
 
-                if(!payload.getString("type").equals(NSR.getInstance(context).getData("lastActivity",""))) {
-                    NSR.getInstance(context).sendCustomEvent("activity", payload);
-                    NSR.getInstance(context).setData("lastActivity", payload.getString("type"));
+			if(!payload.getString("type").equals(NSR.getInstance(context).getData("lastActivity",""))) {
+			    NSR.getInstance(context).sendCustomEvent("activity", payload);
+			    NSR.getInstance(context).setData("lastActivity", payload.getString("type"));
 
-                    if("still".equals(payload.getString("type"))){
-                        if(!NSR.getInstance(context).getStillPositionSent()){
-                            JSONObject payloadPosition = new JSONObject();
-                            payloadPosition.put("still", 1);
-                            payloadPosition.put("latitude", NSR.getInstance(context).getCurrentLocation().getDouble("latitude"));
-                            payloadPosition.put("longitude", NSR.getInstance(context).getCurrentLocation().getDouble("longitude"));
-                            NSR.getInstance(context).sendCustomEvent("position", payloadPosition);
-                        }
-                        NSR.getInstance(context).setStillPositionSent(true);
-                    }
-                }
+			    if("still".equals(payload.getString("type"))){
+				if(!NSR.getInstance(context).getStillPositionSent()){
+				    JSONObject payloadPosition = new JSONObject();
+				    payloadPosition.put("still", 1);
+				    payloadPosition.put("latitude", NSR.getInstance(context).getCurrentLocation().getDouble("latitude"));
+				    payloadPosition.put("longitude", NSR.getInstance(context).getCurrentLocation().getDouble("longitude"));
+				    NSR.getInstance(context).sendCustomEvent("position", payloadPosition);
+				}
+				NSR.getInstance(context).setStillPositionSent(true);
+			    }
+			}
+		}
             } catch (Exception e) {
             }
         }
