@@ -3,9 +3,7 @@ package eu.neosurance.sdk;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.AlarmManager;
 import android.app.Application;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -16,8 +14,6 @@ import android.os.Looper;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
 import com.google.gson.Gson;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
@@ -49,7 +45,6 @@ public class NSR {
     private JSONObject currentLocation = null;
     private JSONObject lastLocation = null;
     private boolean stillPositionSent = false;
-    private FusedLocationProviderClient fusedLocationClient;
     private NSRSecurityDelegate securityDelegate = null;
     private JSONObject variables;
 

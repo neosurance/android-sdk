@@ -2,12 +2,13 @@ package eu.neosurance.sdk;
 
 import android.app.IntentService;
 import android.content.Intent;
+import android.location.Location;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.DetectedActivity;
-
+import com.google.android.gms.location.LocationResult;
 
 public class NSRActivityRecognitionService extends IntentService {
     public static final String ACTION = "NSRActivityRecognition";
@@ -27,7 +28,6 @@ public class NSRActivityRecognitionService extends IntentService {
                     i.setAction(ACTION);
                     i.putExtra("activity", type);
                     i.putExtra("conficende", mostProbable.getConfidence());
-                    //sendBroadcast(i);
                     LocalBroadcastManager.getInstance(this).sendBroadcast(i);
                 }
             }catch (Exception e) {

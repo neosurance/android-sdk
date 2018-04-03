@@ -8,6 +8,8 @@ import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -22,14 +24,13 @@ import android.webkit.WebViewClient;
 
 import com.clickntap.tap.AppActivity;
 import com.clickntap.tap.web.TapWebView;
-import com.clickntap.tap.web.TapWebViewDelegate;
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+
 
 import org.json.JSONObject;
 
@@ -52,11 +53,8 @@ public class CustomDemoActivity extends AppActivity  implements View.OnTouchList
     protected double latitude = -1;
     protected double longitude = -1;
     protected Location currentLocation;
-    protected String resultCallback = null;
-    protected GoogleMap googleMap;
-
+    protected GoogleMap googleMap;;
     protected TextToSpeech tts;
-    protected FusedLocationProviderClient fusedLocationClient;
 
     protected MediaPlayer btnSound;
     protected MediaPlayer pushSound;
@@ -101,8 +99,6 @@ public class CustomDemoActivity extends AppActivity  implements View.OnTouchList
         shape.setCornerRadius(160);
         shape.setColor(Color.WHITE);
         findViewById(R.id.btnCloseDemoWebUi).setBackground(shape);
-
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
     }
 
     public void playPushSound() {
@@ -152,8 +148,8 @@ public class CustomDemoActivity extends AppActivity  implements View.OnTouchList
                     longitude = currentLocation.getLongitude();
                     googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()), 4));
                 }
-                googleMap.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
-                    public void onCameraIdle() {
+                googleMap.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener(){
+                    public void onCameraChange(CameraPosition cameraPosition) {
                         if (uiMapOpened) {
                             Address address = NSRUtils.getAddress(getApplicationContext(), googleMap.getCameraPosition().target.latitude, googleMap.getCameraPosition().target.longitude);
                             if (address != null) {

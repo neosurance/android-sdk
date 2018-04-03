@@ -27,6 +27,5 @@ public class NSRSync extends BroadcastReceiver {
 
     public void onReceive(Context context, Intent intent) {
         NSRService.start(context);
-        //context.startService(new Intent(context, NSRService.class));
     }
 }

@@ -1,6 +1,7 @@
 package eu.neosurance.demo;
 
 import android.Manifest;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -9,14 +10,22 @@ import android.location.Location;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import com.clickntap.tap.web.TapWebView;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.ActivityRecognition;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+//import com.google.android.gms.tasks.OnFailureListener;
+//import com.google.android.gms.tasks.OnSuccessListener;
 import org.json.JSONObject;
 
 
@@ -32,7 +41,6 @@ public class DemoActivity extends CustomDemoActivity{
 
         loadUi();
         initializeSDK();
-        initializeGPS();
         initializeSpeech();
         initializeMap();
     }
@@ -44,7 +52,6 @@ public class DemoActivity extends CustomDemoActivity{
             configuration.put("base_demo_url", "https://sandbox.neosurancecloud.net/demo/conf?code=");
             configuration.put("ask_permission", 1);
             NSR.getInstance(this).setup(configuration);
-
 
             callbackManager = NSRCallbackManager.Factory.create();
             NSR.getInstance(this).registerCallback(callbackManager, new NSRBase64Image.Callback() {
@@ -65,25 +72,6 @@ public class DemoActivity extends CustomDemoActivity{
             });
         } catch (Exception e) {
             Log.d(NSR.TAG, e.getMessage(), e);
-        }
-    }
-
-    protected void initializeGPS() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
-            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            fusedLocationClient.getLastLocation()
-                    .addOnSuccessListener(new OnSuccessListener<Location>() {
-                        public void onSuccess(Location location) {
-                            if (location != null) {
-                                Log.d(NSR.TAG, "Ottenuta l'ultima posizione GPS");
-                                onLocationChanged(location);
-                            }
-                        }
-                    }).addOnFailureListener(new OnFailureListener() {
-                public void onFailure(Exception e) {
-                    Log.d(NSR.TAG, "Errore durante il tentativo di ottenere l'ultima posizione GPS");
-                }
-            });
         }
     }
 
