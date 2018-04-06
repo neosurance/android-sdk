@@ -131,7 +131,7 @@ public class NSRServiceTask extends AsyncTask<String, Void, String> {
 
     protected String doInBackground(String... params) {
         Log.d(NSR.TAG, "doInBackground.....");
-        if (Connectivity.isConnected(context)) {
+        if (mGoogleApiClient != null && Connectivity.isConnected(context)) {
             mGoogleApiClient.connect();
             battery();
             connection();
