@@ -55,6 +55,10 @@ public class NSRActivityRecognitionService extends IntentService {
 			} catch (Exception e) {
 				Log.d(NSR.TAG, "NSRActivityRecognitionService " + e.toString());
 			}
+			NSRServiceTask st = NSR.getInstance().getServiceTask();
+			if (st != null)
+				st.shutDownRecognition();
+			NSR.getInstance().setServiceTask(null);
 		}
 	}
 

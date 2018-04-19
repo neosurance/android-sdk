@@ -33,8 +33,6 @@ import org.json.JSONObject;
 
 public class NSRServiceTask extends AsyncTask<String, Void, String> {
 	private Context context;
-	private JobService jobService;
-	private JobParameters jobParameters;
 	private JSONObject conf;
 
 	private GoogleApiClient mGoogleApiClient;
@@ -42,15 +40,7 @@ public class NSRServiceTask extends AsyncTask<String, Void, String> {
 	private LocationRequest mLocationRequest;
 	private LocationListener mLocationListener;
 
-	private boolean requestActivityUpdates = false;
 	private int nLocation = 0;
-
-	public NSRServiceTask(JobService jobService, JobParameters jobParameters) {
-		this.jobService = jobService;
-		this.jobParameters = jobParameters;
-		this.context = jobService.getApplicationContext();
-		init();
-	}
 
 	public NSRServiceTask(Context context) {
 		this.context = context;
@@ -58,6 +48,9 @@ public class NSRServiceTask extends AsyncTask<String, Void, String> {
 	}
 
 	public void init() {
+		if (NSR.getInstance(context).getServiceTask() != null)
+			return;
+		NSR.getInstance(context).setServiceTask(this);
 		try {
 			this.conf = NSR.getInstance(context).getAuthSettings().getJSONObject("conf");
 			if (GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS) {
@@ -69,7 +62,7 @@ public class NSRServiceTask extends AsyncTask<String, Void, String> {
 				mLocationListener = new LocationListener() {
 					public void onLocationChanged(Location location) {
 						Log.d(NSR.TAG, "mLocationListener..nloc.. " + nLocation);
-						if (location != null && (location.getAccuracy() <= 50 || nLocation > 2)) {
+						if (location != null && (location.getAccuracy() <= 50 || nLocation > 1)) {
 							Log.d(NSR.TAG, "mLocationListener.." + location.getAccuracy());
 							try {
 								float distanceInMeters = 0.0f;
@@ -105,7 +98,6 @@ public class NSRServiceTask extends AsyncTask<String, Void, String> {
 
 								activity();
 
-
 							} catch (Exception e) {
 							}
 							LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, mLocationListener);
@@ -123,7 +115,6 @@ public class NSRServiceTask extends AsyncTask<String, Void, String> {
 						}
 
 						public void onConnectionSuspended(int i) {
-							mGoogleApiClient.connect();
 						}
 					})
 					.build();
@@ -158,12 +149,12 @@ public class NSRServiceTask extends AsyncTask<String, Void, String> {
 	protected void activity() {
 		Log.d(NSR.TAG, "activity.....");
 		try {
-			if (mGoogleApiClient != null && !requestActivityUpdates && conf.getJSONObject("activity").getInt("enabled") == 1) {
-				Log.d(NSR.TAG, "activity in.....");
+			Log.d(NSR.TAG, "activity in.....");
 
+			if (mGoogleApiClient != null && conf.getJSONObject("activity").getInt("enabled") == 1) {
+				Log.d(NSR.TAG, "activity in in.....");
 				mPendingIntent = PendingIntent.getService(context, 0, new Intent(context, NSRActivityRecognitionService.class), PendingIntent.FLAG_UPDATE_CURRENT);
 				ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates(mGoogleApiClient, 0, mPendingIntent);
-				this.requestActivityUpdates = true;
 			}
 		} catch (Exception e) {
 		}
@@ -225,28 +216,36 @@ public class NSRServiceTask extends AsyncTask<String, Void, String> {
 		}
 	}
 
-	protected void onPostExecute(String result) {
+	public void shutDownRecognition() {
+		try {
+			Log.d(NSR.TAG, "shutDownRecognition...");
+			NSR.getInstance(context).setServiceTask(null);
+			ActivityRecognition.ActivityRecognitionApi.removeActivityUpdates(mGoogleApiClient, mPendingIntent);
+			if (mGoogleApiClient.isConnected()) {
+				mGoogleApiClient.disconnect();
+			}
+		} catch (Exception e) {
+		}
+	}
+
+	/*protected void onPostExecute(String result) {
+		Log.d(NSR.TAG, "onPostExecute...");
 		try {
 			if (mGoogleApiClient != null) {
-				if (requestActivityUpdates) {
-					ActivityRecognition.ActivityRecognitionApi.removeActivityUpdates(mGoogleApiClient, mPendingIntent);
-				}
 				if (mGoogleApiClient.isConnected()) {
 					mGoogleApiClient.disconnect();
 				}
 			}
+			shutDownRecognition();
 		} catch (Exception e) {
 		}
 
+
 		if (jobService != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-			try {
-				NSRJobService.schedule(context, conf.getInt("time") * 1000);
-			} catch (Exception e) {
-			}
 			jobService.jobFinished(jobParameters, false);
 		}
 
-	}
+	}*/
 
 	private static class Connectivity {
 		public static NetworkInfo getNetworkInfo(Context context) {
