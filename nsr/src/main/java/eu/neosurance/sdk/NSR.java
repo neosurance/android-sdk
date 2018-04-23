@@ -14,6 +14,13 @@ import android.os.Looper;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
+import com.firebase.jobdispatcher.Constraint;
+import com.firebase.jobdispatcher.FirebaseJobDispatcher;
+import com.firebase.jobdispatcher.GooglePlayDriver;
+import com.firebase.jobdispatcher.Job;
+import com.firebase.jobdispatcher.Lifetime;
+import com.firebase.jobdispatcher.RetryStrategy;
+import com.firebase.jobdispatcher.Trigger;
 import com.google.gson.Gson;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
@@ -49,6 +56,7 @@ public class NSR {
 	private JSONObject variables;
 
 	private NSRServiceTask serviceTask = null;
+	private FirebaseJobDispatcher mDispatcher;
 
 	public void setServiceTask(NSRServiceTask serviceTask) {
 		this.serviceTask = serviceTask;
@@ -62,11 +70,7 @@ public class NSR {
 	private NSR(Context ctx) {
 		this.ctx = ctx;
 		this.variables = new JSONObject();
-	}
-
-	public static NSR getInstance() {
-		return instance;
-
+		mDispatcher = new FirebaseJobDispatcher(new GooglePlayDriver(ctx));
 	}
 
 	public static NSR getInstance(Context ctx) {
@@ -402,16 +406,17 @@ public class NSR {
 			if (ActivityCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
 				ActivityCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
 				JSONObject conf = getAuthSettings().getJSONObject("conf");
-
-				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-					Log.d(NSR.TAG, "Start Job Service...");
-					NSRJobService.schedule(ctx, 1000);
-				} else {
-					Log.d(NSR.TAG, "Start Service...");
-					NSRService.start(ctx);
-					NSRSync.register(ctx, conf.getInt("time") * 1000);
-				}
-
+				Job myJob = mDispatcher.newJobBuilder()
+						.setService(NSRFBJobService.class)
+						.setTag(NSRFBJobService.TAG)
+						.setRecurring(true)
+						.setTrigger(Trigger.executionWindow(5, conf.getInt("time")))
+						.setLifetime(Lifetime.UNTIL_NEXT_BOOT)
+						.setReplaceCurrent(false)
+						.setConstraints(Constraint.ON_ANY_NETWORK)
+						.setRetryStrategy(RetryStrategy.DEFAULT_EXPONENTIAL)
+						.build();
+				mDispatcher.mustSchedule(myJob);
 			}
 
 		} catch (Exception e) {
@@ -420,11 +425,7 @@ public class NSR {
 	}
 
 	private void stopService() {
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-			NSRJobService.cancel(ctx);
-		} else {
-			NSRSync.unregister(ctx);
-		}
+		mDispatcher.cancel(NSRFBJobService.TAG);
 	}
 
 	public void showApp() throws Exception {

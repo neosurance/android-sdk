@@ -48,8 +48,11 @@ public class NSRServiceTask extends AsyncTask<String, Void, String> {
 	}
 
 	public void init() {
-		if (NSR.getInstance(context).getServiceTask() != null)
-			return;
+		NSRServiceTask st = NSR.getInstance(context).getServiceTask();
+		if (st != null) {
+			Log.d(NSR.TAG, "init..shutDownRecognition");
+			st.shutDownRecognition();
+		}
 		NSR.getInstance(context).setServiceTask(this);
 		try {
 			this.conf = NSR.getInstance(context).getAuthSettings().getJSONObject("conf");
@@ -100,7 +103,10 @@ public class NSRServiceTask extends AsyncTask<String, Void, String> {
 
 							} catch (Exception e) {
 							}
-							LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, mLocationListener);
+							try {
+								LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, mLocationListener);
+							} catch (Exception e) {
+							}
 						}
 						nLocation++;
 					}
@@ -217,10 +223,16 @@ public class NSRServiceTask extends AsyncTask<String, Void, String> {
 	}
 
 	public void shutDownRecognition() {
+		Log.d(NSR.TAG, "shutDownRecognition...");
 		try {
-			Log.d(NSR.TAG, "shutDownRecognition...");
-			NSR.getInstance(context).setServiceTask(null);
 			ActivityRecognition.ActivityRecognitionApi.removeActivityUpdates(mGoogleApiClient, mPendingIntent);
+		} catch (Exception e) {
+		}
+		try {
+			LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, mLocationListener);
+		} catch (Exception e) {
+		}
+		try {
 			if (mGoogleApiClient.isConnected()) {
 				mGoogleApiClient.disconnect();
 			}

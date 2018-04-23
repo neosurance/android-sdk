@@ -46,4 +46,6 @@ dependencies {
     compile 'com.github.clickntap:android-tap-framework:1.1'
     compile 'com.google.code.gson:gson:2.8.2'
     compile 'id.zelory:compressor:2.1.0'
+
+    implementation 'com.firebase:firebase-jobdispatcher:0.8.5'
 }
