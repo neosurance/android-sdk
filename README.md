@@ -83,7 +83,7 @@ Step 2. Add the dependency
 
 ```gradle
 	dependencies {
-		compile 'com.github.clickntap:android-neosurance-sdk:1.3.7'
+		compile 'com.github.clickntap:android-neosurance-sdk:1.3.8'
 	}
 ```
 
