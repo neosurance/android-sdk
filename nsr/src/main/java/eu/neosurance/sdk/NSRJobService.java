@@ -22,7 +22,6 @@ public class NSRJobService extends JobService {
 	public static void schedule(Context context, long intervalMillis) {
 		JobInfo.Builder builder = new JobInfo.Builder(JOB_SERVICE_ID, new ComponentName(context, NSRJobService.class));
 		builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY);
-		//builder.setPeriodic(intervalMillis);
 		builder.setMinimumLatency(intervalMillis);
 		JobScheduler jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
 		jobScheduler.schedule(builder.build());
@@ -36,12 +35,17 @@ public class NSRJobService extends JobService {
 	@Override
 	public boolean onStartJob(JobParameters jobParameters) {
 		Log.d(NSR.TAG, "onStartJob");
-		serviceTask = new NSRServiceTask(getApplicationContext());
-		serviceTask.execute();
+
+		//Context ctx = getApplicationContext();
+		Context ctx = getBaseContext();
+
 		try {
-			JSONObject conf = NSR.getInstance(getApplicationContext()).getAuthSettings().getJSONObject("conf");
-			NSRJobService.schedule(getApplicationContext(), conf.getInt("time") * 1000);
+			JSONObject conf = NSR.getInstance(ctx).getAuthSettings().getJSONObject("conf");
+			NSRJobService.schedule(ctx, conf.getInt("time") * 1000);
+			serviceTask = new NSRServiceTask(ctx);
+			serviceTask.execute();
 		} catch (Exception e) {
+			Log.d(NSR.TAG, e.toString());
 		}
 		return false;
 	}

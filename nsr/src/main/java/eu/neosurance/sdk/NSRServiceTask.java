@@ -56,6 +56,7 @@ public class NSRServiceTask extends AsyncTask<String, Void, String> {
 		NSR.getInstance(context).setServiceTask(this);
 		try {
 			this.conf = NSR.getInstance(context).getAuthSettings().getJSONObject("conf");
+			Log.d(NSR.TAG, "isGooglePlayServicesAvailable >> " + (GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS));
 			if (GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS) {
 				mLocationRequest = LocationRequest.create();
 				mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
@@ -102,10 +103,12 @@ public class NSRServiceTask extends AsyncTask<String, Void, String> {
 								activity();
 
 							} catch (Exception e) {
+								Log.d(NSR.TAG, "init 1 >> " + e.toString());
 							}
 							try {
 								LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, mLocationListener);
 							} catch (Exception e) {
+								Log.d(NSR.TAG, "init 2 >> " + e.toString());
 							}
 						}
 						nLocation++;
@@ -121,19 +124,25 @@ public class NSRServiceTask extends AsyncTask<String, Void, String> {
 						}
 
 						public void onConnectionSuspended(int i) {
+							mGoogleApiClient.connect();
 						}
 					})
 					.build();
 			}
 
 		} catch (Exception e) {
+			Log.d(NSR.TAG, "init 3 >> " + e.toString());
 		}
 	}
 
 	protected String doInBackground(String... params) {
 		Log.d(NSR.TAG, "doInBackground.....");
+		Log.d(NSR.TAG, "mGoogleApiClient >> " + mGoogleApiClient);
+		Log.d(NSR.TAG, "Connectivity.isConnected >> " + Connectivity.isConnected(context));
 		if (mGoogleApiClient != null && Connectivity.isConnected(context)) {
-			battery();
+			if (battery()) {
+				SystemClock.sleep(2000);
+			}
 			connection();
 			mGoogleApiClient.connect();
 		}
@@ -149,6 +158,7 @@ public class NSRServiceTask extends AsyncTask<String, Void, String> {
 				}
 			}
 		} catch (Exception e) {
+			Log.d(NSR.TAG, "doInBackground >> " + e.toString());
 		}
 	}
 
@@ -163,10 +173,11 @@ public class NSRServiceTask extends AsyncTask<String, Void, String> {
 				ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates(mGoogleApiClient, 0, mPendingIntent);
 			}
 		} catch (Exception e) {
+			Log.d(NSR.TAG, "activity >> " + e.toString());
 		}
 	}
 
-	protected void battery() {
+	protected boolean battery() {
 		try {
 			if (conf.getJSONObject("power").getInt("enabled") == 1) {
 				Log.d(NSR.TAG, "battery in.....");
@@ -193,14 +204,16 @@ public class NSRServiceTask extends AsyncTask<String, Void, String> {
 					Log.d(NSR.TAG, "battery sending.....");
 					NSR.getInstance(context).sendCustomEvent("power", payload);
 					NSR.getInstance(context).setData("lastPower", payload.toString());
+					return true;
 				}
 			}
 		} catch (Exception e) {
-			Log.d(NSR.TAG, e.toString());
+			Log.d(NSR.TAG, "battery >> " + e.toString());
 		}
+		return false;
 	}
 
-	protected void connection() {
+	protected boolean connection() {
 		try {
 			if (conf.getJSONObject("connection").getInt("enabled") == 1) {
 				Log.d(NSR.TAG, "connection in.....");
@@ -216,10 +229,13 @@ public class NSRServiceTask extends AsyncTask<String, Void, String> {
 
 					NSR.getInstance(context).sendCustomEvent("connection", payload);
 					NSR.getInstance(context).setData("lastConnection", payload.getString("type"));
+					return true;
 				}
 			}
 		} catch (Exception e) {
+			Log.d(NSR.TAG, "connection >> " + e.toString());
 		}
+		return false;
 	}
 
 	public void shutDownRecognition() {
@@ -239,25 +255,6 @@ public class NSRServiceTask extends AsyncTask<String, Void, String> {
 		} catch (Exception e) {
 		}
 	}
-
-	/*protected void onPostExecute(String result) {
-		Log.d(NSR.TAG, "onPostExecute...");
-		try {
-			if (mGoogleApiClient != null) {
-				if (mGoogleApiClient.isConnected()) {
-					mGoogleApiClient.disconnect();
-				}
-			}
-			shutDownRecognition();
-		} catch (Exception e) {
-		}
-
-
-		if (jobService != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-			jobService.jobFinished(jobParameters, false);
-		}
-
-	}*/
 
 	private static class Connectivity {
 		public static NetworkInfo getNetworkInfo(Context context) {

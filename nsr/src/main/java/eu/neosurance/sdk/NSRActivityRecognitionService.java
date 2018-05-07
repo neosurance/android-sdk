@@ -1,6 +1,7 @@
 package eu.neosurance.sdk;
 
 import android.app.IntentService;
+import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
 import android.os.SystemClock;
@@ -24,10 +25,12 @@ public class NSRActivityRecognitionService extends IntentService {
 		if (ActivityRecognitionResult.hasResult(intent)) {
 			ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
 			DetectedActivity mostProbable = result.getMostProbableActivity();
+			Context ctx = getBaseContext();
+			//Context ctx = getApplicationContext();
 			try {
 				String type = getType(mostProbable.getType());
 				Log.d(NSR.TAG, "NSRActivityRecognitionService.." + type);
-				JSONObject conf = NSR.getInstance(getApplicationContext()).getAuthSettings().getJSONObject("conf");
+				JSONObject conf = NSR.getInstance(ctx).getAuthSettings().getJSONObject("conf");
 				Log.d(NSR.TAG, "confidence.." + mostProbable.getConfidence());
 				Log.d(NSR.TAG, "confidence cut.." + conf.getJSONObject("activity").getInt("confidence"));
 				if (!"".equals(type) && mostProbable.getConfidence() >= conf.getJSONObject("activity").getInt("confidence")) {
@@ -35,27 +38,27 @@ public class NSRActivityRecognitionService extends IntentService {
 					payload.put("type", type);
 					payload.put("confidence", mostProbable.getConfidence());
 
-					if (!payload.getString("type").equals(NSR.getInstance(getApplicationContext()).getData("lastActivity", ""))) {
+					if (!payload.getString("type").equals(NSR.getInstance(ctx).getData("lastActivity", ""))) {
 						if ("still".equals(payload.getString("type"))) {
-							if (!NSR.getInstance(getApplicationContext()).getStillPositionSent()) {
+							if (!NSR.getInstance(getBaseContext()).getStillPositionSent()) {
 								JSONObject payloadPosition = new JSONObject();
 								payloadPosition.put("still", 1);
-								payloadPosition.put("latitude", NSR.getInstance(getApplicationContext()).getCurrentLocation().getDouble("latitude"));
-								payloadPosition.put("longitude", NSR.getInstance(getApplicationContext()).getCurrentLocation().getDouble("longitude"));
-								NSR.getInstance(getApplicationContext()).sendCustomEvent("position", payloadPosition);
+								payloadPosition.put("latitude", NSR.getInstance(getBaseContext()).getCurrentLocation().getDouble("latitude"));
+								payloadPosition.put("longitude", NSR.getInstance(getBaseContext()).getCurrentLocation().getDouble("longitude"));
+								NSR.getInstance(ctx).sendCustomEvent("position", payloadPosition);
 							}
-							NSR.getInstance(getApplicationContext()).setStillPositionSent(true);
+							NSR.getInstance(ctx).setStillPositionSent(true);
 							SystemClock.sleep(2000);
 						}
 
-						NSR.getInstance(getApplicationContext()).sendCustomEvent("activity", payload);
-						NSR.getInstance(getApplicationContext()).setData("lastActivity", payload.getString("type"));
+						NSR.getInstance(ctx).sendCustomEvent("activity", payload);
+						NSR.getInstance(ctx).setData("lastActivity", payload.getString("type"));
 					}
 				}
 			} catch (Exception e) {
 				Log.d(NSR.TAG, "NSRActivityRecognitionService " + e.toString());
 			}
-			NSRServiceTask st = NSR.getInstance(getApplicationContext()).getServiceTask();
+			NSRServiceTask st = NSR.getInstance(ctx).getServiceTask();
 			if (st != null)
 				st.shutDownRecognition();
 		}
