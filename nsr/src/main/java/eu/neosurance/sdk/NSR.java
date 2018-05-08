@@ -331,11 +331,11 @@ public class NSR {
 				settings.put("dev_mode", 0);
 			}
 			setStillPositionSent(false);
-			setAuthSettings(null);
-			setUser(null);
 			setSettings(settings);
 
 			if (settings.has("base_demo_url")) {
+				setAuthSettings(null);
+				setUser(null);
 				JSONObject demoSettings = getDemoSettings();
 				final String demoCode = demoSettings.has("code") ? demoSettings.getString("code") : "";
 				final String url = getSettings().getString("base_demo_url") + demoCode;
