@@ -294,6 +294,15 @@ public class NSR {
 	}
 
 	public void setup(final JSONObject settings) {
+		setup(settings, false);
+	}
+
+	private void setup(final JSONObject settings, boolean hard) {
+		if (!hard && !settings.has("base_demo_url") && this.settings != null) {
+			Log.d(NSR.TAG, "already setup");
+			return;
+		}
+		Log.d(NSR.TAG, "setup");
 		try {
 			if ("0".equals(getData("permission_required", "0")) && settings.has("ask_permission") && settings.getInt("ask_permission") == 1) {
 				setData("permission_required", "1");
@@ -325,6 +334,7 @@ public class NSR {
 			setAuthSettings(null);
 			setUser(null);
 			setSettings(settings);
+
 			if (settings.has("base_demo_url")) {
 				JSONObject demoSettings = getDemoSettings();
 				final String demoCode = demoSettings.has("code") ? demoSettings.getString("code") : "";
@@ -350,7 +360,7 @@ public class NSR {
 									appSettings.put("secret_key", getDemoSettings().getString("secretKey"));
 									appSettings.put("code", getDemoSettings().getString("communityCode"));
 									appSettings.put("dev_mode", getDemoSettings().getString("devMode"));
-									setup(appSettings);
+									setup(appSettings,true);
 
 									NSRUser user = new NSRUser();
 									user.setEmail(getDemoSettings().getString("email"));
