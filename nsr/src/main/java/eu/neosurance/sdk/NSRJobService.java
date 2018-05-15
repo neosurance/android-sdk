@@ -28,20 +28,24 @@ public class NSRJobService extends JobService {
 	}
 
 	public static void cancel(Context context) {
-		JobScheduler jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
-		jobScheduler.cancel(JOB_SERVICE_ID);
+		//JobScheduler jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
+		//jobScheduler.cancel(JOB_SERVICE_ID);
 	}
 
 	@Override
 	public boolean onStartJob(JobParameters jobParameters) {
 		Log.d(NSR.TAG, "onStartJob");
 
-		//Context ctx = getApplicationContext();
-		Context ctx = getBaseContext();
+		Context ctx = getApplicationContext();
 
 		try {
-			JSONObject conf = NSR.getInstance(ctx).getAuthSettings().getJSONObject("conf");
-			NSRJobService.schedule(ctx, conf.getInt("time") * 1000);
+			try {
+				JSONObject conf = NSR.getInstance(ctx).getAuthSettings().getJSONObject("conf");
+				NSRJobService.schedule(ctx, conf.getInt("time") * 1000);
+			} catch (Exception ee) {
+				Log.d(NSR.TAG, "retry schedule...");
+				NSRJobService.schedule(ctx, 5000);
+			}
 			serviceTask = new NSRServiceTask(ctx);
 			serviceTask.execute();
 		} catch (Exception e) {

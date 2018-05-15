@@ -53,6 +53,8 @@ public class DemoActivity extends CustomDemoActivity {
 			configuration.put("base_url", "https://sandbox.neosurancecloud.net/sdk/api/v1.0/");
 			configuration.put("base_demo_url", "https://sandbox.neosurancecloud.net/demo/conf?code=");
 			configuration.put("ask_permission", 1);
+			NSR.getInstance(this).setData("securityDelegateClass",null);
+			//NSR.getInstance(this).setSecurityDelegate(new DemoSecurity());
 			NSR.getInstance(this).setup(configuration);
 
 			callbackManager = NSRCallbackManager.Factory.create();

@@ -25,8 +25,7 @@ public class NSRActivityRecognitionService extends IntentService {
 		if (ActivityRecognitionResult.hasResult(intent)) {
 			ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
 			DetectedActivity mostProbable = result.getMostProbableActivity();
-			Context ctx = getBaseContext();
-			//Context ctx = getApplicationContext();
+			Context ctx = getApplicationContext();
 			try {
 				String type = getType(mostProbable.getType());
 				Log.d(NSR.TAG, "NSRActivityRecognitionService.." + type);

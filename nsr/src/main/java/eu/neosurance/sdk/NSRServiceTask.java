@@ -31,6 +31,8 @@ import com.google.android.gms.location.LocationServices;
 
 import org.json.JSONObject;
 
+import java.util.Map;
+
 public class NSRServiceTask extends AsyncTask<String, Void, String> {
 	private Context context;
 	private JSONObject conf;
@@ -99,7 +101,6 @@ public class NSRServiceTask extends AsyncTask<String, Void, String> {
 									NSR.getInstance(context).setStillPositionSent(false);
 									NSR.getInstance(context).setLastLocation(locationAsJson);
 								}
-
 								activity();
 
 							} catch (Exception e) {

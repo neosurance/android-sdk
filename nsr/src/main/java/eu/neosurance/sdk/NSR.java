@@ -66,8 +66,16 @@ public class NSR {
 
 	public static NSR getInstance(Context ctx) {
 		if (instance == null) {
+			Log.d(TAG, "making instance...");
 			instance = new NSR(ctx);
-			instance.setSecurityDelegate(new NSRDefaultSecurity());
+
+			try {
+				String s = instance.getData("securityDelegateClass", "eu.neosurance.sdk.NSRDefaultSecurity");
+				Log.d(TAG, "making securityDelegate... " + s);
+				instance.setSecurityDelegate((NSRSecurityDelegate) Class.forName(s).newInstance());
+			} catch (Exception e) {
+			}
+
 		} else {
 			instance.ctx = ctx;
 		}
@@ -79,6 +87,7 @@ public class NSR {
 	}
 
 	public void setSecurityDelegate(NSRSecurityDelegate securityDelegate) {
+		setData("securityDelegateClass", securityDelegate.getClass().getName());
 		this.securityDelegate = securityDelegate;
 	}
 
@@ -226,6 +235,7 @@ public class NSR {
 				}
 			});
 		} catch (Exception e) {
+			Log.e(TAG, e.getMessage());
 		}
 	}
 
@@ -293,15 +303,8 @@ public class NSR {
 		}
 	}
 
-	public void setup(final JSONObject settings) {
-		setup(settings, false);
-	}
 
-	private void setup(final JSONObject settings, boolean hard) {
-		if (!hard && !settings.has("base_demo_url") && this.settings != null) {
-			Log.d(NSR.TAG, "already setup");
-			return;
-		}
+	public void setup(final JSONObject settings) {
 		Log.d(NSR.TAG, "setup");
 		try {
 			if ("0".equals(getData("permission_required", "0")) && settings.has("ask_permission") && settings.getInt("ask_permission") == 1) {
@@ -360,7 +363,7 @@ public class NSR {
 									appSettings.put("secret_key", getDemoSettings().getString("secretKey"));
 									appSettings.put("code", getDemoSettings().getString("communityCode"));
 									appSettings.put("dev_mode", getDemoSettings().getString("devMode"));
-									setup(appSettings,true);
+									setup(appSettings);
 
 									NSRUser user = new NSRUser();
 									user.setEmail(getDemoSettings().getString("email"));
@@ -517,8 +520,13 @@ public class NSR {
 	}
 
 	public void sendCustomEvent(String name, JSONObject payload) throws Exception {
-		NSRRequest request = new NSRRequest(NSRUtils.makeEvent(name, payload));
-		request.send(ctx);
+		try {
+			NSRRequest request = new NSRRequest(NSRUtils.makeEvent(name, payload));
+			request.send(ctx);
+		} catch (Exception e) {
+			Log.e(TAG, e.getMessage());
+			throw e;
+		}
 	}
 
 	public String getData(String key, String defVal) {

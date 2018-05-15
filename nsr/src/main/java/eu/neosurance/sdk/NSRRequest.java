@@ -36,6 +36,7 @@ public class NSRRequest {
                 JSONObject headers = new JSONObject();
                 headers.put("ns_token", token);
                 headers.put("ns_lang", NSR.getInstance(ctx).getSettings().getString("ns_lang"));
+                Log.d(NSR.TAG, "sec delegate: " + NSR.getInstance(ctx).getSecurityDelegate());
 
                 NSR.getInstance(ctx).getSecurityDelegate().secureRequest(ctx, "event", payload, headers, new NSRSecurityResponse() {
                     public void completionHandler(JSONObject json, String error) throws Exception {
