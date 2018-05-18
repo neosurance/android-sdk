@@ -143,7 +143,7 @@ public class NSR {
 	}
 
 	public String getVersion() {
-		return "1.0";
+		return "1.3.16";
 	}
 
 	public JSONObject getSettings() {
@@ -402,6 +402,15 @@ public class NSR {
 
 		} catch (Exception e) {
 			Log.d("nsr", e.getMessage(), e);
+		}
+	}
+
+	public void bootCompleted() {
+		try {
+			JSONObject conf = getAuthSettings().getJSONObject("conf");
+			if (conf != null)
+				startService();
+		} catch (Exception e) {
 		}
 	}
 

@@ -24,6 +24,11 @@ public class NSRJobService extends JobService {
 		builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY);
 		builder.setMinimumLatency(intervalMillis);
 		JobScheduler jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
+		try {
+			jobScheduler.cancel(JOB_SERVICE_ID);
+		} catch (Exception e) {
+			Log.e(NSR.TAG, "schedule... ", e);
+		}
 		jobScheduler.schedule(builder.build());
 	}
 

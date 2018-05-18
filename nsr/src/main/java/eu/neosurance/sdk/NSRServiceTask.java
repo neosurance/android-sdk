@@ -129,7 +129,8 @@ public class NSRServiceTask extends AsyncTask<String, Void, String> {
 						}
 					})
 					.build();
-			}
+			}else
+				sendNoGps();
 
 		} catch (Exception e) {
 			Log.d(NSR.TAG, "init 3 >> " + e.toString());
@@ -156,10 +157,28 @@ public class NSRServiceTask extends AsyncTask<String, Void, String> {
 				if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
 					ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
 					LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, mLocationListener);
+					NSR.getInstance(context).setData("gpsState", "on");
+				} else {
+					sendNoGps();
 				}
+			} else {
+				sendNoGps();
 			}
 		} catch (Exception e) {
 			Log.d(NSR.TAG, "doInBackground >> " + e.toString());
+			sendNoGps();
+		}
+	}
+
+	private void sendNoGps() {
+		try {
+			if ("on".equals(NSR.getInstance(context).getData("gpsState", "on"))) {
+				Log.d(NSR.TAG, "no_gps.....");
+				NSR.getInstance(context).setData("gpsState", "off");
+				NSR.getInstance(context).sendCustomEvent("no_gps", new JSONObject());
+			}
+		} catch (Exception e) {
+			Log.d(NSR.TAG, "sendNoGps >> " + e.toString());
 		}
 	}
 
