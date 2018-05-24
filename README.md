@@ -163,8 +163,7 @@ Step 2. Add the dependency
 
 ## Author
 
-Giovanni Tigli, giovanni.tigli@neosurance.eu
-Tonino Mendicino, tonino.mendicino@clickntap.com
+info@neosurance.eu
 
 ## License
 
