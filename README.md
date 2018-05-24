@@ -1,6 +1,6 @@
 # NeosuranceSDK
 
-[![](https://jitpack.io/v/clickntap/android-neosurance-sdk.svg)](https://jitpack.io/#clickntap/android-neosurance-sdk)
+[![](https://jitpack.io/v/neosurance/android-sdk.svg)](https://jitpack.io/#neosurance/android-sdk)
 
 - Collects info from device sensors and from the hosting app
 - Exchanges info with the AI engines
