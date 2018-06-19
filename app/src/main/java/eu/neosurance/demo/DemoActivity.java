@@ -1,37 +1,26 @@
 package eu.neosurance.demo;
 
-import android.Manifest;
-import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.location.Location;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.SystemClock;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import com.clickntap.tap.web.TapWebView;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.common.GooglePlayServicesUtil;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.ActivityRecognition;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
-//import com.google.android.gms.tasks.OnFailureListener;
-//import com.google.android.gms.tasks.OnSuccessListener;
+
 import org.json.JSONObject;
 
+import eu.neosurance.sdk.NSR;
+import eu.neosurance.sdk.NSRBase64Image;
+import eu.neosurance.sdk.NSRCallbackManager;
 
-import eu.neosurance.sdk.*;
+//import com.google.android.gms.tasks.OnFailureListener;
+//import com.google.android.gms.tasks.OnSuccessListener;
 
 public class DemoActivity extends CustomDemoActivity {
 	private NSRCallbackManager callbackManager;

@@ -32,11 +32,12 @@ android {
 }
 
 dependencies {
+    implementation project(':nsr')
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.loopj.android:android-async-http:1.4.9'
     implementation 'com.android.support:appcompat-v7:25.4.0'
     implementation 'com.android.support.constraint:constraint-layout:1.0.2'
     implementation 'com.android.support:design:25.4.0'
     implementation 'com.github.clickntap:android-tap-framework:1.1'
-    implementation project(':nsr')
+    implementation 'com.google.android.gms:play-services-maps:8.4.0'
 }
